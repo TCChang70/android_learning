@@ -28,6 +28,7 @@ How many of these compile?
 - F. 5
 
 <!-- 答案：D -->
+<!-- 詳解：c1、c2、c5 可編譯(3個)。c3 混用 var 與明確型別、c4 混用 var 與無型別，違反「var 需全部或全不用」規則。 -->
 
 ### Q2
 What is the output of the following application?
@@ -62,6 +63,7 @@ public class Airplane{
 - E. None of the above
 
 <!-- 答案：A -->
+<!-- 詳解：constructor 內 x 被強制設為 4，故 end=4；fly 印 end-start=4-2=2 後印 distance=5 → “2 5”。 -->
 
 ### Q3
 Given the code fragment:
@@ -82,6 +84,7 @@ What is the result?
 - E. 15
 
 <!-- 答案：E -->
+<!-- 詳解：i=10、j=5。(j*5+i)/j-2=(25+10)/5-2=7-2=5，i+=5 ⇒ i=15。 -->
 
 ### Q4
 Given:
@@ -108,6 +111,7 @@ What is the result?
 - D. 4
 
 <!-- 答案：D -->
+<!-- 詳解：HOWDY→ ” HOWDY”(6)→ ” HOLLY”(6)→ ” HOLLYCOW”(9)→ delete(2,7) 剩 “ HOW”(4)，長度 4。 -->
 
 ### Q5
 Given:
@@ -139,6 +143,7 @@ What is the result?
 - F. hey oh hi ey
 
 <!-- 答案：D -->
+<!-- 詳解：先執行 foo 印出 “hey oh hi ”，再 append “ey” 到 “yo ” → 輸出 “hey oh hi yo ey”。 -->
 
 ### Q6
 Given:
@@ -170,6 +175,7 @@ What is the output?
 - D. The compilation fails due to an error in line 1
 
 <!-- 答案：A -->
+<!-- 詳解：byte+short 提升為 int。無 int 多載時，重載 phase 2 允許 boxing，int→Integer→Object 成立，故選 process(Object) 印 “Object value 25”。 -->
 
 ---
 
@@ -183,9 +189,10 @@ Variables declared as which of the following are never permitted in a switch sta
 - C. int
 - D. String
 - E. char
-- F. Object
+---- F. Object
 
 <!-- 答案：B, F -->
+<!-- 詳解：switch 支援 int、char、String、var(若推斷為上述型別)；double 與 Object 不是合法 switch 型別。 -->
 
 ### Q8
 What is the output of the following application?
@@ -210,6 +217,7 @@ package planning;
 - E. None of the above
 
 <!-- 答案：D -->
+<!-- 詳解：語法 `}else{...}else{...}` 錯誤——else 之後不能再接 else；且 var plan 在頂層(非方法內)不合法的問題。程式無法編譯。 -->
 
 ### Q9
 Given:
@@ -232,6 +240,7 @@ What is the result?
 - D. 5 4 3 2 1 4 3 2 1 3 2 1 2 1 1
 
 <!-- 答案：D -->
+<!-- 詳解：i=10,8,6,4,2 時內層 j 依序印 5..1、4..1、3..1、2..1、1，i 歸 0 結束。 -->
 
 ---
 
@@ -272,6 +281,7 @@ public class Elephant{
 - F. None of the above
 
 <!-- 答案：F -->
+<!-- 詳解：main 呼叫 charge() 但類別只有 charage()(k4 錯誤)；static charage() 內 new MyTrunk()(非靜態內部類)也非法。因 A–E 均未精準描述這些錯誤，故選 F。 -->
 
 ### Q11
 What is the output of the following application?
@@ -305,6 +315,7 @@ public class SoccerBall extends Ball implements Equipment{
 - D. The code compiles but throws a ClassCastException at runtime
 
 <!-- 答案：A -->
+<!-- 詳解：SoccerBall 同時是 Ball 與 Equipment，兩次強制轉型皆成功；size 為 protected 同套件可存取，輸出 5。 -->
 
 ### Q12
 Given:
@@ -354,6 +365,7 @@ Move GameObject
 - D. `Move GameObject`
 
 <!-- 答案：A -->
+<!-- 詳解：move(10.0,10.0) 走 Number 多載(印 Character+super 印 GameObject)；move(10,10) 走 int 多載(僅 GameObject)。總計 Move Character、Move GameObject、Move GameObject。 -->
 
 ### Q13
 Given:
@@ -404,6 +416,7 @@ MEDICAL:Scanner
 ```
 
 <!-- 答案：F -->
+<!-- 詳解：外部類 Menu 可呼叫巢狀 enum 的 private setType。AUTO 被改成 “Sedan”，MEDICAL 不變，故輸出 AUTO: Sedan / MEDICAL: Scanner。 -->
 
 ### Q14
 Given:
@@ -426,6 +439,7 @@ Which is true?
 - D. The code does not compile successfully
 
 <!-- 答案：D -->
+<!-- 詳解：區域變數 myint 在自己的初始化式 `int myint=myint` 中參考自己(尚未初始化)，編譯錯誤。 -->
 
 ### Q15
 Given:
@@ -474,6 +488,7 @@ What is the result?
 - G. 42
 
 <!-- 答案：G -->
+<!-- 詳解：B 的 x(17)shadow 隱藏 A 的 x(42)。obj 宣告為 A 型別，obj.x 解析為 A.x=42。程式可編譯。 -->
 
 ### Q16
 Given:
@@ -507,6 +522,7 @@ Which two lines of code when inserted in line 1 correctly modifies instance vari
 - E. setGCount(g);
 
 <!-- 答案：B, E -->
+<!-- 詳解：B 用 return 值指派 cCount；E 呼叫 setter 修改 gCount。A、D 是參數自賦(`tCount=tCount`、`aCount=aCount`)不影響實例欄位；C 語法錯誤。 -->
 
 ### Q17
 Given:
@@ -540,6 +556,7 @@ What is the result?
 - D. 1.99,2.99,0
 
 <!-- 答案：C -->
+<!-- 詳解：final 欄位 value 未被建構器 `Price(){}` 初始化，且未在宣告時賦值 → 編譯失敗。 -->
 
 ### Q18
 Given:
@@ -572,6 +589,7 @@ Assuming that this code compiles correctly, which three statements are true?
 - F. A cannot be final.
 
 <!-- 答案：D, E, F -->
+<!-- 詳解：覆寫回傳型別必須父子相容，故 B extends A(D 對)；BuilderImpl 需 new B 使 B 不能是 abstract(E)；A 被 B 繼承故不能是 final(F)。 -->
 
 ### Q19
 Given:
@@ -621,6 +639,7 @@ Which three are correct?
 - I. b1.foo(li) prints Bonjour le monde!
 
 <!-- 答案：D, E, G -->
+<!-- 詳解：b1.foo(li)→Bar.foo(List) 印 “Hello Mundol!”(選項D原文打錯為 Hola Mundo!)；f2(type Foo,物件 Bar)→動態分派走 foo(Collection) 印 “Hello world!”；f1.foo(li)→foo(Collection) 印 “Bonjour le monde!”，故 D/E/G。 -->
 
 ### Q20
 Given:
@@ -676,6 +695,7 @@ SomeClass#methodA()
 ```
 
 <!-- 答案：D -->
+<!-- 詳解：`ac=sc` 將父型別 SomeClass 參考賦給子型別 AnotherClass 變數，向下轉型需強制轉型，故編譯失敗。 -->
 
 ### Q21
 Given:
@@ -719,6 +739,7 @@ What is the result?
 - E. ab action
 
 <!-- 答案：E -->
+<!-- 詳解：Test 覆寫 action 印 “ab action”；AbilityA 的 default 被具現化免除衝突。x 參考指向 Test 執行其版本。 -->
 
 ### Q22
 Given the enum declaration:
@@ -744,6 +765,7 @@ What code should be written at line 3 to make this code print A?
 - D. `final String getFirstLetter() { return A.toString();}`
 
 <!-- 答案：A -->
+<!-- 詳解：呼叫方式 `Alphabet.getFirstLetter()` 需 static 方法，且需回傳 A 的字串。C/D 非 static，B 回傳陣列 toString 非 “A”。 -->
 
 ### Q23
 Given:
@@ -774,6 +796,7 @@ final void methodG(){
 - G. `public abstract void methodB();`
 
 <!-- 答案：A, G -->
+<!-- 詳解：A 抽象方法、G public abstract 方法都合法。B 需 default/static；C 欄位未初始化；E final 方法需體且 interface 需 default；F private 與 abstract 矛盾。 -->
 
 ### Q24
 Given:
@@ -831,6 +854,7 @@ Which statement is true?
 - D. The memory allocated for Jane object can be reused at line 1.
 
 <!-- 答案：A -->
+<!-- 詳解：createPeople 結束後 john 失去外部參照(line1 即可回收)。line2 建立 Jack(child=Jane)，jane 仍被 Jack.child 持有不可回收，Jack 也被 person 持有，故僅 John 可回收 → A。 -->
 
 ### Q25
 Given:
@@ -859,6 +883,7 @@ Why does D cause a compilation error?
 - D. D extends more than one interface
 
 <!-- 答案：C -->
+<!-- 詳解：D 同時繼承 B 的 Collection 與 C 的 Path 回傳 a()，兩型別不相容，覆寫回傳衝突→編譯錯誤。 -->
 
 ### Q26
 Given the code fragment:
@@ -886,6 +911,7 @@ What is the result?
 - E. 10
 
 <!-- 答案：A -->
+<!-- 詳解：static final y 未初始化，編譯器在使用點(line13)報「可能尚未初始化」。 -->
 
 ### Q27
 Given:
@@ -915,6 +941,7 @@ Which is true?
 - G. The compilation fails due to an error in line 2
 
 <!-- 答案：D -->
+<!-- 詳解：Cookie 是(不可實作的)abstract class，class 只能 implements interface。line6 `implements Cookie` 非法。 -->
 
 ---
 
@@ -950,6 +977,7 @@ public class WhackAnException{
 - F. None of the above
 
 <!-- 答案：D -->
+<!-- 詳解：try 拋 CCE→第二 catch(RE) 匹配、拋 NPE；finally 再拋 RuntimeException 覆蓋前一個例外，故印 RuntimeException。 -->
 
 ### Q29
 Given the following application, what is the name of the class printed at line e1?
@@ -986,6 +1014,7 @@ public class Cliff{
 - E. None of the above
 
 <!-- 答案：B -->
+<!-- 詳解：主體 throw RuntimeException，close() 的 FallenException 成為 suppressed(附加於主體)，主例外為 RuntimeException。 -->
 
 ### Q30
 Given:
@@ -1027,6 +1056,7 @@ catch(FileNotFoundException e){}
 - E. `catch(FileNotFoundException | IndexOutBoundException e){}`
 
 <!-- 答案：C -->
+<!-- 詳解：doA 可拋 Exception 與 IOOBE(其為 RuntimeException)，最簡潔是單一 catch(Exception e)。多 catch 版本 B/D 型別重疊或拼字錯誤。 -->
 
 ### Q31
 Given:
@@ -1051,6 +1081,7 @@ Which statement inserted on line 1 will accomplish this?
 - D. characters.read();
 
 <!-- 答案：C -->
+<!-- 詳解：FileReader.read(char[]) 將資料讀入陣列。readLine() 屬 BufferedReader；read() 回一次一字的 int，characters=reader.read() 型別不符。 -->
 
 ### Q32
 Given:
@@ -1109,6 +1140,7 @@ What is the result?
 ```
 
 <!-- 答案：C -->
+<!-- 詳解：丟出 ExSub(9001,”APPLICATION ERROR-9001”,FNFE)，getMessage 組出 “9001: APPLICATION ERROR-9001_MyFile.txt”(程式用底線 `_`，選項 C 印連字號為原題小瑕疵，答案仍為 C)。 -->
 
 ### Q33
 Given:
@@ -1137,6 +1169,7 @@ What is the result?
 - D. The compilation fails
 
 <!-- 答案：C -->
+<!-- 詳解：parseInt("a") 拋 NumberFormatException→回 Optional.empty()→.get() 拋 NoSuchElementException。 -->
 
 ### Q34
 Given:
@@ -1181,6 +1214,7 @@ What is the result?
 - E. abdf
 
 <!-- 答案：D -->
+<!-- 詳解：印 a、b 後 doB 拋 FNFE→catch 印 C 並 return→finally 仍印 d；return 使 f 不印。輸出 abcd。 -->
 
 ### Q35
 Given:
@@ -1216,6 +1250,7 @@ What is the output?
 - D. Exception
 
 <!-- 答案：C -->
+<!-- 詳解：除以 0 拋 ArithmeticException→catch 設 num=100，finally 再設 num=300，最後印 300。 -->
 
 ### Q36
 Given:
@@ -1248,6 +1283,7 @@ What is the output?
 - D. 9
 
 <!-- 答案：B -->
+<!-- 詳解：實例欄位 sum 被累加。第1次 compute:sum=6,回 6/4=1；第2次:sum=6+1+2+3=12,回 12/4=3。輸出 3。 -->
 
 ---
 
@@ -1269,6 +1305,7 @@ public static void getExceptions(Collection<__> coll){
 - D. None of the above
 
 <!-- 答案：C -->
+<!-- 詳解：？super Exception 可 add Exception 及其子類 RuntimeException。？extends 只能讀不能 add。 -->
 
 ### Q38
 What does the following output?
@@ -1291,6 +1328,7 @@ What does the following output?
 - E. The code throws an exception at runtime
 
 <!-- 答案：E -->
+<!-- 詳解：for-each 疊代中直接 set.remove() ，modCount 與 iterator 的 expectedModCount 不符→ConcurrentModificationException。 -->
 
 ### Q39
 Given:
@@ -1317,6 +1355,7 @@ What is the result?
 - D. 1 2 4 5
 
 <!-- 答案：C -->
+<!-- 詳解：用 a1.remove(2) 而非 itr.remove()，疊代進行中修改集合→ConcurrentModificationException。 -->
 
 ### Q40
 Given:
@@ -1367,6 +1406,7 @@ sphynx
 ```
 
 <!-- 答案：B -->
+<!-- 詳解：sort(-a.compareTo(b)) 取負→反向字典序(降序)：sphynx、oxicat、laperm、korat、bengal、abyssinian。 -->
 
 ---
 
@@ -1407,6 +1447,7 @@ public class Thermometer {
 - F. None of the above
 
 <!-- 答案：E -->
+<!-- 詳解：Map.forEach 需要 BiConsumer(key,value)，System.out::println 只有單參數版本，無法當 BiConsumer→k3 編譯失敗。 -->
 
 ### Q42
 What is the output of the following application?
@@ -1444,6 +1485,7 @@ public class Warehouse {
 - D. The code does not compile for a different reason
 
 <!-- 答案：C -->
+<!-- 詳解：BooleanSupplier 的方法名是 getAsBoolean()，不是 get()。checkInventory() 中 stock.get() 不存在→編譯失敗。 -->
 
 ### Q43
 Which code fragment represents a valid Comparator implementation?
@@ -1482,6 +1524,7 @@ new Comparator<String>() {
 ```
 
 <!-- 答案：D -->
+<!-- 詳解：A 方法名應為 compare；B 回傳型別應為 int；C 泛型 Comparator 需 compare(Object,Object)。只有 D 正確。 -->
 
 ### Q44
 Given:
@@ -1503,6 +1546,7 @@ Which one is correct?
 - D. The code may produce a different result
 
 <!-- 答案：D -->
+<!-- 詳解：findAny() 在 parallelStream 中元素選取不確定，結果可能不同。 -->
 
 ### Q45
 Given the code fragment:
@@ -1521,6 +1565,7 @@ Which can replace line 2?
 - D. `UnaryOperator<Integer> u=(int i)->i*2;`
 
 <!-- 答案：C -->
+<!-- 詳解：以 var 作參數時須加括號 (var i)；A `var i->` 少括號、B `i->{return...}` 語法語法上其實也可但非所選、D 型別不符所需語法 → C。 -->
 
 ### Q46
 Which two are valid statements?
@@ -1533,6 +1578,7 @@ Which two are valid statements?
 - E. `BiPredicate<Integer,Integer> test=(Integer var x,final var y)->(x.equals(y));`
 
 <!-- 答案：B, D -->
+<!-- 詳解：參數需全用 var 或全用明確型別，不可混用。B 全明確(可加 final)、D 全 var(可加 final)合法；A/C/E 混用。 -->
 
 ### Q47
 Why would you choose to use a peek operation instead of a forEach operation on a Stream?
@@ -1543,6 +1589,7 @@ Why would you choose to use a peek operation instead of a forEach operation on a
 - D. to remove an item from the end of the stream
 
 <!-- 答案：A -->
+<!-- 詳解：peek 是 intermediate 操作，處理後仍回傳 Stream；forEach 是 terminal 回傳 void。 -->
 
 ### Q48
 Given the content from `lines.txt`
@@ -1598,6 +1645,7 @@ KOTLIN
 ```
 
 <!-- 答案：C -->
+<!-- 詳解：先過濾掉 JAVA(忽略大小寫)，再轉大寫→C、C++、GO、KOTLIN。 -->
 
 ### Q49
 Given:
@@ -1652,6 +1700,7 @@ Map<String,List<Employee>> r1=roster.stream()
 ```
 
 <!-- 答案：A, E -->
+<!-- 詳解：需「薪資>30 依 neighborhood 分組」。E 以 neighborhood(String) 為 key 並在下游 filtering(p) 篩薪資；A 以 f 的 Optional 為 key 同樣下游篩選。兩者型別與語意皆成立。B 第二參數無效、D 以 Predicate 當分組鍵錯誤、C key 型別不符。 -->
 
 ### Q50
 Given the code fragment:
@@ -1706,6 +1755,7 @@ banana orange apple lemon apple banana lemon orange
 ------
 ```
 <!-- 答案：A -->
+<!-- 詳解：stream 是 lazy，兩個 println("--------") 在定義時立即執行；until terminal collect 才觸發 peek——先印原序(banana orange apple lemon)、sorted 後再印排序序(apple banana lemon orange)。 -->
 
 ---
 
@@ -1723,6 +1773,7 @@ What statements are true about `requires mandated java.base`?
 - F. Some modules will include this in the output.
 
 <!-- 答案：C, E -->
+<!-- 詳解：`requires mandated java.base` 出現在 jdeps 的模組相依輸出，且因 java.base 是每一模組皆隱含的根基模組，所有模組都會列它。 -->
 
 ### Q52
 What is the name of a file that declares a module?
@@ -1735,6 +1786,7 @@ What is the name of a file that declares a module?
 - F. module-info.java
 
 <!-- 答案：F -->
+<!-- 詳解：模組描述檔固定命名為 module-info.java，置於模組原始碼根目錄。 -->
 
 ### Q53
 Suppose you have a module that contains a class with a call to `exports(ChocolateLab.class)`. Which part of the module service contains this class?
@@ -1746,6 +1798,7 @@ Suppose you have a module that contains a class with a call to `exports(Chocolat
 - E. None of the above
 
 <!-- 答案：E -->
+<!-- 詳解：`exports` 是 module-info 的 directive，以套件為參數並不存在「呼叫 exports(某 class)」的方法；服務架構四類均不符合。 -->
 
 ### Q54
 How many of these keywords can be used in a module-info.java file: `close, export, import, require, and uses`?
@@ -1758,6 +1811,7 @@ How many of these keywords can be used in a module-info.java file: `close, expor
 - F. Five
 
 <!-- 答案：B -->
+<!-- 詳解：五字中只有 `uses` 是正式 module-info directive。close/export/import/require 皆非(需為 exports、requires)。 -->
 
 ### Q55
 Which module provides the foundational APIs of the Java SE Platform?
@@ -1768,6 +1822,7 @@ Which module provides the foundational APIs of the Java SE Platform?
 - D. java.se
 
 <!-- 答案：B -->
+<!-- 詳解：java.base 是 JPMS 根基模組，提供 java.lang、java.util 等核心 API，自動 require。 -->
 
 ---
 
@@ -1814,6 +1869,7 @@ public class SearchList<T> {
 - F. None of the above
 
 <!-- 答案：A -->
+<!-- 詳解：Thread.run() 是同步執行而非啟動新執行緒，整段二分遞迴同步完成，終究找到 5 使 foundMatch=true。 -->
 
 ### Q57
 Which of the following methods is not available on an ExecutorService instance?
@@ -1827,6 +1883,7 @@ Which of the following methods is not available on an ExecutorService instance?
 - F. execute(Runnable)
 
 <!-- 答案：A, D -->
+<!-- 詳解：execute() 只接收 Runnable、不接受 Callable；ExecutorService 沒有 exit() 方法(終止用 shutdown/shutdownNow)。 -->
 
 ### Q58
 Given:
@@ -1860,6 +1917,7 @@ What is the output?
 - D. 1 2 [1, 2, 3, four] 3 four
 
 <!-- 答案：A -->
+<!-- 詳解：CoW 疊代的 iterator 為 snapshot，佳見修改；t 於 ~150ms 把 index3 改成 four 並印出整個 list。時間序：main 印 1、2→t 印 “[1, 2, 3, four]”→main 續印 3、4。 -->
 
 ### Q59
 Given:
@@ -1911,6 +1969,7 @@ What needs to change to make these classes compile and still handle all types of
 - D. Replace Line 2 with `private List<HardWorker> processes=new ArrayList<>();`
 
 <!-- 答案：B -->
+<!-- 詳解：processes 是 List<T>，addProcess(T w) 型別最契合且能支援所有 Worker。A/C/D 會排除非 HardWorker 或型別不相容。 -->
 
 ---
 
@@ -1927,6 +1986,7 @@ Why does Console `readPassword()` return a char array rather than a String?
 - F. None of the above
 
 <!-- 答案：B -->
+<!-- 詳解：密碼存於 String 因不可變性會殘留在記憶體；用 char[] 可於用完後覆寫，提升安全性。 -->
 
 ### Q61
 Fill in the blanks: Writer is a(n) ___________ that related stream classes __________
@@ -1939,6 +1999,7 @@ Fill in the blanks: Writer is a(n) ___________ that related stream classes _____
 - F. None of the above
 
 <!-- 答案：B -->
+<!-- 詳解：java.io.Writer 是抽象類別，InputStream 相關類別以 extends 繼承它(非 implements)。 -->
 
 ### Q62
 Given:
@@ -1962,6 +2023,7 @@ Which method should be overridden?
 - D. nothing
 
 <!-- 答案：D -->
+<!-- 詳解：Serializable 是 marker interface，不含任何需覆寫的方法。readExternal/writeExternal 屬於 Externalizable。 -->
 
 ---
 
@@ -1978,6 +2040,7 @@ Fill in the blanks: ___________ means the state of an object cannot be changed, 
 - F. None of the above
 
 <!-- 答案：B -->
+<!-- 詳解：immutability 指物件狀態建立後不可變；mutability 指可變。 -->
 
 ### Q64
 How do you change the value of an instance variable in an immutable class?
@@ -1989,6 +2052,7 @@ How do you change the value of an instance variable in an immutable class?
 - E. You can't
 
 <!-- 答案：E -->
+<!-- 詳解：不可變類別沒有 setter、欄位為 private final，建立後無法更改實例變數。 -->
 
 ### Q65
 Given:
@@ -2015,6 +2079,7 @@ Which change would make Foo more secure?
 - D. `public static final String ALPHA="alpha";`
 
 <!-- 答案：D -->
+<!-- 詳解：原 ALPHA 為 public mutable 欄位，可被外部任意改寫。加上 final 使其成為不可變常數，最不安全之處被修正。 -->
 
 ---
 
@@ -2041,6 +2106,7 @@ var stmt=conn.createStatement()){
 - D. The code throws a SQLException
 
 <!-- 答案：C -->
+<!-- 詳解：createStatement() 回傳 Statement，無 setString() 方法(屬 PreparedStatement)，且 SQL 的 ? 占位符只能用 PreparedStatement。編譯失敗。 -->
 
 ### Q67
 What must be the first characters of a database URL?
@@ -2052,6 +2118,7 @@ What must be the first characters of a database URL?
 - E. None of the above
 
 <!-- 答案：D -->
+<!-- 詳解：JDBC URL 必須以 `jdbc:` 開頭，後接子協定與資料庫路徑。 -->
 
 ### Q68
 Assuming the user credentials are correct, which expression will create a Connection?
@@ -2063,6 +2130,7 @@ Assuming the user credentials are correct, which expression will create a Connec
 - E. DriverManager.getConnection("J_SMITH","dt12%2f3");
 
 <!-- 答案：A -->
+<!-- 詳解：唯一符合 `jdbc:<subprotocol>:<db>` 正確 URL 格式的呼叫。其他缺少 jdbc: 前綴或父格式錯誤。 -->
 
 ---
 
@@ -2080,6 +2148,7 @@ Which of the following are considered locales?
 - F. Geographical region
 
 <!-- 答案：A, E, F -->
+<!-- 詳解：Locale 由文化、政治、地理區域構成；地址、城市、時區等不屬 Locale 分類。 -->
 
 ### Q70
 When localizing an application, which type of data varies in presentation depending on locale?
@@ -2090,6 +2159,7 @@ When localizing an application, which type of data varies in presentation depend
 - D. Neither
 
 <!-- 答案：C -->
+<!-- 詳解：貨幣符號與日期格式兩者都會隨 Locale 改變呈現方式。 -->
 
 ### Q71
 Given the code fragment:
@@ -2111,6 +2181,7 @@ Which code inserted on line 1 will accomplish this?
 - D. `NumberFormat formatter=NumberFormat.getCurrencyInstance(locale);`
 
 <!-- 答案：D -->
+<!-- 詳解：getCurrencyInstance(Locale) 回傳幣別格式化器，能輸出 $100.00。其餘的 getInstance(非幣別)、getCurrency(不存在)不正確。 -->
 
 ### Q72
 Which code fragment does a service use to load the service provider with a Print interface?
@@ -2121,6 +2192,7 @@ Which code fragment does a service use to load the service provider with a Print
 - D. `private Print print=new com.service.PrintImpl();`
 
 <!-- 答案：A -->
+<!-- 詳解：ServiceLoader.load(Print.class) 是載入 service provider 的正確方式；ServiceLoader 無法 new。 -->
 
 ---
 
@@ -2137,6 +2209,7 @@ What modifier is used to mark an annotation element as optional?
 - F. None of the above
 
 <!-- 答案：B -->
+<!-- 詳解：用 `default` 關鍵字給定預設值即代表該元素為可選。 -->
 
 ### Q74
 Fill in the blank with the correct annotation usage that allows the code to compile without any warnings.
@@ -2161,6 +2234,7 @@ class SystemPlanner {
 - F. None of the above
 
 <!-- 答案：D -->
+<!-- 詳解：@SuppressWarnings 接受 String[]，需以 `{"deprecation","unchecked"}` 陣列型式才合法。 -->
 
 ### Q75
 Given the declaration:
@@ -2187,6 +2261,7 @@ Which two annotations may be applied at Loc1 in the code fragment?
 - E. `@Resource("Customer1")`
 
 <!-- 答案：D, E -->
+<!-- 詳解：value() 是 String[]。若只有單一值可用簡寫 @Resource("...")，多值需陣列 @Resource({...})。C 省略值不合(單一元素須提供)，A 空陣列語法須為 {}。 -->
 
 ---
 
