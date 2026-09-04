@@ -169,13 +169,6 @@
 2. 每章末「自我測驗」先作答再看解答。
 3. 完整範例照貼後**實際 Run 到模擬器驗證**。
 4. 完成後搭配 **`04`–`06` AI 指南**反覆練習與擴充。
-5. 延伸閱讀：`Appendix_A`（專案建立）、`Appendix_B`（Lambda）、`Appendix_D`（Gradle）、`Appendix_G`（生命週期）、`Appendix_H`（Swing vs Android）。
 
 ---
 
-## 後續延伸方向（完成三天之後）
-
-- **網路請求 Retrofit**：以 Java 連結後端 Spring Boot REST API（可參考前面的 Retrofit 教學）
-- **Jetpack Architecture**：ViewModel、LiveData、MVVM
-- **Jetpack Compose**：宣告式 UI（下一學習方向）
-- 範例整合：把 Day 1 的 BMI 計算邏輯搬到 Spring Boot 端，用 Retrofit 串起來
