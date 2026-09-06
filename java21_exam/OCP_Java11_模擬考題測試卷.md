@@ -189,7 +189,7 @@ Variables declared as which of the following are never permitted in a switch sta
 - C. int
 - D. String
 - E. char
-- F. Object
+---- F. Object
 
 <!-- 答案：B, F -->
 <!-- 詳解：switch 支援 int、char、String、var(若推斷為上述型別)；double 與 Object 不是合法 switch 型別。 -->
