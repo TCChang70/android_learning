@@ -807,9 +807,12 @@ startActivity(web);
 </LinearLayout>
 ```
 
-**佈局說明**：
-- 很單純：標題 + 兩支按鈕，`gravity="center"` 讓元件置中。
-- `btnDial`：觸發撥號。`btnWeb`：觸發開網頁。因為只是呼叫系統，不需要第二支 Activity。
+**佈局說明（由上到下）**：
+- 根容器 `<LinearLayout ... android:orientation="vertical" android:gravity="center" android:padding="24dp">`：垂直排列、子元件**置中**、四邊留 24dp。
+1. **標題**「呼叫系統功能」（22sp 粗體）。
+2. **`<Button android:id="@+id/btnDial">`**「撥號（Dial）」：觸發撥號動作。
+3. **`<Button android:id="@+id/btnWeb">`**「開啟網頁（View）」：觸發開啟網頁。
+- 因為只是**呼叫系統其他 App**（撥號介面、瀏覽器），不需要自己寫第二支 Activity——這正是「系統 Intent」挑 App 處理的特色。
 
 **Step 3 程式 `MainActivity.java`**：
 
@@ -1260,10 +1263,13 @@ new AlertDialog.Builder(this)
 </LinearLayout>
 ```
 
-**佈局說明**：
-- 外層垂直 `LinearLayout`，內層水平 `LinearLayout` 放「輸入框 + 新增鈕」。
-- `EditText`（`etTodo`）用 `layout_width="0dp"` + `layout_weight="1"`：把水平剩餘空間全部讓給輸入框，按鈕只佔 `wrap_content` 寬度。
-- `ListView`（`listView`）佔滿下方整片，負責捲動顯示待辦。
+**佈局說明（由上到下）**：
+- 外層 `<LinearLayout ... android:orientation="vertical" android:padding="16dp">`：垂直排列、四邊留 16dp。
+1. **內層水平 `LinearLayout`**（`orientation="horizontal"`、`layout_marginTop="16dp"`）：把「輸入框」與「新增」按鈕**並排成同一列**。
+   - `<EditText android:id="@+id/etTodo" ...>`：輸入待辦內容。
+   - `layout_width="0dp"` + `layout_weight="1"`：`weight=1` 表示「把水平剩餘空間全吃下」→ 輸入框**自動撐滿**剩餘寬度。
+   - `<Button android:id="@+id/btnAdd" ... android:text="新增">`：按鈕只需 `wrap_content` 寬度（貼右側）。
+2. **`<ListView android:id="@+id/listView">`**：佔滿下方整片（`match_parent`），`layout_marginTop="16dp"` 與上方輸入列隔開。它只負責**顯示與捲動**，每一列的內容由 Java 的 `ArrayAdapter` 提供。
 
 > 預期結果：上方水平排列「輸入框 + 新增鈕」，下方整片 ListView。
 
@@ -1443,10 +1449,12 @@ public class MainActivity extends AppCompatActivity {
 </LinearLayout>
 ```
 
-**佈局說明（畫面 B）**：
-- 兩支 `EditText`：`etName`（商品名稱）、`etPrice`（價格，`inputType="number"` 限制只能輸數字）。
-- `btnSave`（"儲存並返回"）：把修改結果傳回 A。
-- 這支範例展示了「A 傳值給 B 讓它初始化欄位，B 改完傳回給 A」的雙向溝通過程。
+**佈局說明（畫面 B，由上到下）**：
+1. `<EditText android:id="@+id/etName" ... android:hint="商品名稱">`：**商品名稱輸入框**，`match_parent` 佔滿寬度，空框顯示灰色提示「商品名稱」。
+2. `<EditText android:id="@+id/etPrice" ... android:layout_marginTop="12dp" android:inputType="number">`：**價格輸入框**，`inputType="number"` 限制只能輸數字（鍵盤也只彈數字）。
+3. `<Button android:id="@+id/btnSave" ... android:text="儲存並返回">`：把修改結果傳回 A 的按鈕（`marginTop="24dp"` 與輸入框拉開距離）。
+
+> 補充：這支畫面會被 A 用 `putExtra` 塞入**初始值**（商品名稱、價格），Java 用 `getStringExtra` 讀回後填入輸入框；B 改完再 `putExtra` 回傳——完整示範「A → B 帶初值、B → A 回修改」的雙向溝通。
 
 **Step 5 畫面 A 的程式 `MainActivity.java`**：
 
@@ -1836,8 +1844,13 @@ public class ColorAdapter extends RecyclerView.Adapter<ColorAdapter.ColorViewHol
 ```
 
 **佈局說明（畫面 B）**：
-- 整個畫面只有一個 `androidx.recyclerview.widget.RecyclerView`（id `recyclerView`），佔滿畫面。
-- **注意**：XML 只放「容器」，存放的「每一列長相」由 `row_color.xml` 決定，排放的「方向」由 Java 的 LayoutManager 決定。三者分工清楚。
+- 根容器只是薄薄包一層垂直 `LinearLayout`（`padding="8dp"`）。
+- 整個畫面只有一個 **`androidx.recyclerview.widget.RecyclerView`**（id `recyclerView`），`match_parent` 佔滿畫面。
+- **分工提醒**：
+  - XML 只放「**容器**」→ 告訴系統「列表放這裡」。
+  - 「每一列長什麼樣」由 `row_color.xml` 決定（Step 3）。
+  - 「排放方向（垂直/水平/網格）」由 Java 的 `LayoutManager` 決定（Step 8 的 `LinearLayoutManager(this)`）。
+  - 三者分工清楚，彼此不用互相知道細節。
 
 **Step 7 畫面 A 程式 `MainActivity.java`**：
 

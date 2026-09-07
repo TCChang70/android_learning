@@ -518,10 +518,11 @@ public abstract class AppDatabase extends RoomDatabase {
 ```
 
 **佈局說明（RecyclerView 每一列的樣板）**：
-- 根為「垂直」的 `LinearLayout`，`padding="16dp"` 讓每列文字留邊距。
-- `tvTitle`：顯示標題，較大（18sp）且加粗。
-- `tvContent`：顯示內容，較小（14sp）。
-- 這支檔的作用：告訴 RecyclerView「每一列長什麼樣」。會被 `MemoAdapter` 的 `onCreateViewHolder` 用來 inflate。
+- 根為「**垂直**」的 `LinearLayout`：`wrap_content` 高度（多高由內容決定）、`padding="16dp"` 讓每列文字留邊距。
+- 由上而下兩個 `TextView`：
+  1. `tvTitle`：顯示標題——較大（18sp）且**加粗**，當最主要的那行字。
+  2. `tvContent`：顯示內容——較小（14sp），放標題之下。
+- 這支檔的作用：**告訴 RecyclerView「每一列長什麼樣」**。它會被 `MemoAdapter` 的 `onCreateViewHolder` 用 `inflate(R.layout.row_memo, ...)` 讀取，資料變動時「一再重複套用」成為許多列。
 
 ### 5-6 Adapter：`MemoAdapter.java`
 
@@ -688,10 +689,11 @@ adapter = new MemoAdapter(
 </LinearLayout>
 ```
 
-**佈局說明（主畫面）**：根為垂直 `LinearLayout`。
-- `etTitle` / `etContent`：標題與內容兩個輸入框（用 `hint` 顯示灰底提示文字）。
-- `btnAdd`：新增按鈕。
-- `RecyclerView`：**資料列表佔滿剩餘空間**（`layout_height="match_parent"`），`marginTop` 與輸入區隔開。列表內容由程式中的 Adapter 動態填入。
+**佈局說明（主畫面，由上到下）**：根為垂直 `LinearLayout`，四邊留 16dp。
+1. `<EditText android:id="@+id/etTitle" ... android:hint="標題">`：**標題輸入框**，`match_parent` 佔滿寬度，空框顯示灰色提示「標題」。
+2. `<EditText android:id="@+id/etContent" ... android:hint="內容">`：**內容輸入框**，緊接其下（未設 marginTop，靠系統預設間距）。
+3. `<Button android:id="@+id/btnAdd" ... android:text="新增備忘錄">`：**新增按鈕**，`match_parent` 佔滿寬度。
+4. `<androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerView" ...>`：**備忘錄列表**——`layout_height="match_parent"` 佔滿剩餘空間、`layout_marginTop="16dp"` 與輸入區隔開；列表內容由程式中的 `MemoAdapter` 動態填入（每列長相見 `row_memo.xml`）。
 
 ### 5-8 主程式：`MainActivity.java`
 
@@ -935,12 +937,15 @@ public class MainActivity extends AppCompatActivity {
 </LinearLayout>
 ```
 
-**佈局說明**：根為垂直 `LinearLayout`。
-- 大標題 `TextView`「使用者設定」。
-- `etName` / `etTopic`：名稱與喜好主題兩個輸入框。
-- `btnSavePrefs`：**儲存到 SharedPreferences**。
-- `btnWriteLog`：**把設定寫成檔案**（內部儲存）。
-- `btnReadLog`：**讀回檔案**顯示。
+**佈局說明（由上到下）**：根為垂直 `LinearLayout`，四邊留 24dp。
+1. 大標題 `TextView`「使用者設定」（26sp 粗體）。
+2. `<EditText android:id="@+id/etName" ... android:hint="名稱">`：**名稱輸入框**，`marginTop="24dp"` 與標題拉開距離，空框顯示「名稱」。
+3. `<EditText android:id="@+id/etTopic" ... android:hint="喜好主題">`：**喜好主題輸入框**，`marginTop="12dp"` 與名稱框隔開。
+4. `<Button android:id="@+id/btnSavePrefs" ...>`「儲存設定 (SharedPreferences)」：**把名稱與主題存進 SharedPreferences**，`marginTop="24dp"`。
+5. `<Button android:id="@+id/btnWriteLog" ...>`「寫入日誌 (檔案)」：**把目前設定寫成一個檔案**到 App 私有 `files` 目錄，`marginTop="12dp"`。
+6. `<Button android:id="@+id/btnReadLog" ...>`「讀取日誌 (檔案)」：**讀回該檔**內容並用 AlertDialog 顯示，`marginTop="12dp"`。
+
+> 三支按鈕各對應一種持久化示範：儲存設定→SharedPreferences；寫入/讀取日誌→內部儲存檔案。
 
 **Step 3 `MainActivity.java`**：
 
@@ -1152,11 +1157,12 @@ public class MainActivity extends AppCompatActivity {
 </LinearLayout>
 ```
 
-**佈局說明**：根為垂直 `LinearLayout`。
-- `etName` / `etPhone`：姓名與電話輸入框（`inputType="phone"` 會彈出數字鍵盤）。
-- `btnSignUp`：報名按鈕。
-- `tvCount`：顯示「目前報名人數」的文字（預設 0）。
-- `ListView`：**佔滿剩餘空間**的報名列表（用 Day 2 學會的 ArrayAdapter 方式）。
+**佈局說明（由上到下）**：根為垂直 `LinearLayout`，四邊留 16dp。
+1. `<EditText android:id="@+id/etName" ... android:hint="姓名">`：**姓名輸入框**，`match_parent` 佔滿寬度。
+2. `<EditText android:id="@+id/etPhone" ... android:layout_marginTop="12dp" android:inputType="phone">`：**電話輸入框**；`inputType="phone"` 會讓鍵盤彈出**電話號碼鍵盤**（只顯示數字與電話符號）。
+3. `<Button android:id="@+id/btnSignUp" ... android:text="報名">`：**報名按鈕**，`marginTop="16dp"`、`match_parent`。
+4. `<TextView android:id="@+id/tvCount" ... android:text="目前報名人數：0">`：**人數顯示文字**，`marginTop="12dp"`，預設「目前報名人數：0」，之後由 Java 更新數字。
+5. `<ListView android:id="@+id/listView" ...>`：**報名列表**——`layout_height="match_parent"` 佔滿剩餘空間、`marginTop="12dp"`；用 Day 2 學會的 `ArrayAdapter` 方式顯示，長按列可刪除。
 
 **Step 3 資料庫助手 `DBHelper.java`**（右鍵套件 → **New → Java Class**，名稱 `DBHelper`）：
 
@@ -1730,12 +1736,15 @@ public class ExpenseAdapter extends RecyclerView.Adapter<ExpenseAdapter.ExpenseV
 </LinearLayout>
 ```
 
-**佈局說明（主畫面）**：根為垂直 `LinearLayout`。
-- `tvTotal`：**總額顯示**（24sp 粗體）。
-- `etTitle` / `etAmount`：項目與金額輸入框（`inputType="numberDecimal"` 只能輸數字）。
-- `RadioGroup`：**單選容器**，內含「支出」「收入」兩個 `RadioButton`；`rbExpense` 預設 `checked="true"`。
-- `btnAdd`：新增按鈕。
-- `RecyclerView`：帳目列表佔滿剩餘空間。
+**佈局說明（主畫面，由上到下）**：根為垂直 `LinearLayout`，四邊留 16dp。
+1. `<TextView android:id="@+id/tvTotal" ...>`：**總額顯示**（24sp 粗體，初始「總額：0」），由 Java 用 `dao.getTotal()` 算出淨額後更新。
+2. `<EditText android:id="@+id/etTitle" ... android:hint="項目名稱">`：**項目名稱輸入框**。
+3. `<EditText android:id="@+id/etAmount" ... android:hint="金額" android:inputType="numberDecimal">`：**金額輸入框**——`inputType="numberDecimal"` 允許小數（鍵盤含小數點）。
+4. `<RadioGroup android:id="@+id/radioGroup" ... android:orientation="horizontal">`：**單選容器**，內含「支出」「收入」兩個 `RadioButton` **並排**（同一組內互相排斥，只會選中一個）。
+   - `rbExpense` 設 `android:checked="true"`：**預設選「支出」**。
+   - Java 用 `radioGroup.check(...)` 可動態設預設，SharedPreferences 記住的「上次類別」就是靠這招恢復。
+5. `<Button android:id="@+id/btnAdd" ... android:text="新增帳目">`：新增按鈕。
+6. `<androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerView" ...>`：**帳目列表**——`match_parent` 佔滿剩餘空間、`marginTop="16dp"`；每列長相見 `row_expense.xml`。
 
 ### 8-9 主程式：`MainActivity.java`
 

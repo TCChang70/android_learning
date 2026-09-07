@@ -638,12 +638,38 @@ public class MainActivity extends AppCompatActivity {
 Day 2 會教你用 `Intent` 開新畫面。先記住觀念：
 
 ```java
-startActivity(new Intent(this, SecondActivity.class));
+import android.content.Intent;
+import android.widget.Button;
+
+public class MainActivity extends AppCompatActivity {
+
+    private Button btnNext;   // 宣告「下一頁」按鈕
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        btnNext = findViewById(R.id.btnNext);
+        btnNext.setOnClickListener(v -> {              // 按鈕綁點擊事件（單一方法 → lambda）
+            Intent intent = new Intent(this, SecondActivity.class);
+            startActivity(intent);
+        });
+    }
+}
 ```
 
-**說明**：`new Intent(this, SecondActivity.class)` 建立一個「意圖」——第一參數 `this`（從哪個畫面出發，即目前 Activity），第二參數 `SecondActivity.class`（要到哪個畫面）。`startActivity(...)` 把這個意圖交給系統，系統就會**開啟新的 Activity（畫面）**並切換過去。
+**逐行說明**：
+- `import android.content.Intent;`：匯入 `Intent` 類別，它是 Android「畫面跳轉與傳值」的核心物件。
+- `new Intent(this, SecondActivity.class)`：**建立一個「意圖 (Intent)」**。
+  - 第一參數 `this`：**出發點**（目前的 Activity，即從哪個畫面離開）。
+  - 第二參數 `SecondActivity.class`：**目的地**（要到哪個畫面，寫的是類別的 `.class`）。
+- `startActivity(intent)`：把這個意圖**交給 Android 系統**，系統會自動**開啟新的 Activity（畫面）**並切換過去。
+- 完整寫法也可合併成一行：`startActivity(new Intent(this, SecondActivity.class));`——建意圖 + 啟動畫面。
 
 > ⚡ `Intent` 類似「開新 JFrame 並 setVisible(true)」，但它攜帶「想去哪、帶什麼資料、想做什麼」的資訊。
+> Android 不像 Swing 要自己 `new SecondFrame()`；而是「宣告你要去的地方」，由**系統**負責建立並切換畫面。
+> Day 2 會進一步學 `putExtra() / getStringExtra()` 在畫面間傳值。
 
 ---
 
@@ -1097,12 +1123,20 @@ public class MainActivity extends AppCompatActivity {
 ```
 
 **佈局說明（登入表單，垂直堆疊）**：
-- 標題「會員登入」。
-- `etAccount`（帳號輸入框，`inputType="text"` 一般文字）。
-- `etPassword`（密碼輸入框，**`inputType="textPassword"`** → 輸入內容會以 `●●●` 遮蔽，是密碼欄的關鍵屬性）。
-- `cbShow`（CheckBox「顯示密碼」）— 勾選時要切換密碼的明文/隱藏（邏輯在 Java）。
-- `btnLogin`（登入按鈕）。
-- `tvMessage`（狀態訊息，初始「尚未登入」）。
+
+根元素 `<LinearLayout ... android:orientation="vertical" android:padding="24dp">`：把內容**由上到下排列**，四邊留 24dp。往下共六個子元件：
+
+1. 標題「會員登入」（28sp 粗體）——`wrap_content` 只包住文字。
+2. `<EditText android:id="@+id/etAccount" ...>`：**帳號輸入框**。
+   - `android:layout_marginTop="24dp"`：與上方標題拉出 24dp 間距（把元件隔開）。
+   - `android:hint="帳號"`：空框時顯示的灰色提示文字。
+   - `android:inputType="text"`：一般文字輸入（可換成 `textEmailAddress`、`textPassword` 等）。
+3. `<EditText android:id="@+id/etPassword" ...>`：**密碼輸入框**。
+   - **`android:inputType="textPassword"` 是密碼欄的關鍵屬性**——輸入時內容以 `●●●` 遮蔽，不顯示明文。
+   - `android:layout_marginTop="12dp"`：與帳號框隔 12dp。
+4. `<CheckBox android:id="@+id/cbShow" ...>`：**「顯示密碼」核取方塊**。`wrap_content` 只包「顯示密碼」。勾選與否的「明文/隱藏切換」邏輯寫在 Java（見 `setInputType` 部分）。
+5. `<Button android:id="@+id/btnLogin" ...>`：**登入按鈕**，`match_parent` 佔滿寬度。
+6. `<TextView android:id="@+id/tvMessage" ...>`：**狀態訊息區**，初始「尚未登入」，登入後會改成歡迎訊息。
 
 **Step 3 替換 `MainActivity.java`**：
 
@@ -1308,13 +1342,31 @@ public class MainActivity extends AppCompatActivity {
 </LinearLayout>
 ```
 
-佈局重點解說：
-- `<ImageView android:src="@android:drawable/ic_menu_gallery">` 用的是 **Android 內建圖庫**，不需自己放圖檔。換圖時在程式用 `setImageResource(...)`。`android:contentDescription` 是給無障礙用的圖片描述。
-- `<Spinner>` 跟 `ListView` 一樣需要 **Adapter** 提供選項清單（見下方 Java）。
-- `<Switch>`：**開關**，有內建布林狀態（`isChecked()`）。
-- `<SeekBar>`：**進度條**，`android:max="100"` 最大 100、`android:progress="50"` 目前 50，讀值用 `getProgress()`（int）。
-- `<RatingBar>`：**星等**，`android:numStars="5"` 共 5 顆、`android:rating="3"` 目前 3 顆，讀值用 `getRating()`（float，可含半顆）。
-- 所有元件值最後由「全部更新」按鈕一次匯入 `tvResult`。
+佈局重點解說（由上到下依序）：
+
+根元素 `<LinearLayout ... android:orientation="vertical" android:padding="24dp">`：垂直堆疊全部元件。
+
+1. **標題**「常用 View 元件展示」：`wrap_content` + 26sp 粗體。
+2. **`<ImageView android:id="@+id/imgDemo">`**：圖像顯示區。
+   - `android:layout_width/height="120dp"`：固定 120 × 120 dp（方形）。
+   - `android:src="@android:drawable/ic_menu_gallery"`：**Android 內建圖庫圖示**，`@android:drawable/...` 開頭代表「系統內建資源」，不需自己放圖檔。
+   - `android:contentDescription="圖片展示"`：**無障礙 (a11y) 用**的圖片描述，螢幕閱讀器會唸出來。
+   - 換圖時在程式用 `setImageResource(...)`（見 Java「換圖按鈕」）。
+3. **`<Button android:id="@+id/btnSwapImage">`**「換圖」按鈕：`match_parent` 佔滿寬度。
+4. **`<Spinner android:id="@+id/spinner">`**：**下拉清單**。XML 不需給內容，選項由 Java 的 `Adapter`（ArrayAdapter）提供。
+5. **`<Switch android:id="@+id/switchDemo">`**：**開關元件**，有內建布林狀態，Java 用 `isChecked()` 讀取，`setOnCheckedChangeListener` 監聽。
+6. **`<SeekBar android:id="@+id/seekBar">`**：**進度條**。
+   - `android:max="100"`：最大刻度 100。
+   - `android:progress="50"`：初始位置 50。
+   - Java 用 `getProgress()`（回傳 `int`）讀目前值。
+7. **`<RatingBar android:id="@+id/ratingBar">`**：**星等評分**。
+   - `android:numStars="5"`：顯示 5 顆星。
+   - `android:rating="3"`：預設亮 3 顆。
+   - Java 用 `getRating()`（回傳 `float`，可含半顆如 3.5）讀值。
+8. **`<Button android:id="@+id/btnShowAll">`**「全部更新」按鈕：把以上所有元件值一次寫進 `tvResult`。
+9. **`<TextView android:id="@+id/tvResult">`**：結果文字區（16sp），顯示各元件目前狀態。
+
+> 小結：這支 XML 裡「**圖片固定在 120dp**、`SeekBar`/`RatingBar` 給**預設值**」都是刻意示範——注意每種 View「只做自己該宣告的事」，而讀取值的方式都由各元件專屬方法負責（見 Java 解說）。
 
 **Step 3 替換 `MainActivity.java`**：
 
