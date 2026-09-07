@@ -1,12 +1,12 @@
 # Android 三天入門 — 課程總覽（含 AI 協作指南）
 
 > 對象：具備 Java 開發經驗、熟悉 Swing / JFrame 的開發者，想以 Java 開發 Android App，並進一步連結後端 Spring Boot REST API。
-> 教材：`01`–`03` 為三天合併完整教材；`04`–`06` 為「搭配 AI 產生程式碼」的提示互動指南。
+> 教材：`01`–`03` 為三天合併完整教材；`04`–`08` 為「搭配 AI 產生程式碼」的提示互動指南；`09` 為有完整程式與解釋的 Retrofit 教學；`Phase2` 為下一階段學習路線。
 > 對照方式：全程以「JFrame → Android」的對照思維講解（⚡ 標記）。
 
 ---
 
-## 課程檔案一覽（01–06）
+## 課程檔案一覽（01–09 + Phase 2）
 
 | 檔號 | 檔案 | 主題 | 類型 |
 |------|------|------|------|
@@ -16,8 +16,12 @@
 | 04 | `04_AI_Prompt_Guide_Day1.md` | Day 1 搭配 AI：每個章節的可複製提示 | AI 互動指南 |
 | 05 | `05_AI_Prompt_Guide_Day2.md` | Day 2 搭配 AI：多 Activity / Intent / 列表提示 | AI 互動指南 |
 | 06 | `06_AI_Prompt_Guide_Day3.md` | Day 3 搭配 AI：Room / SQLite / 記帳總成果提示 | AI 互動指南 |
+| 07 | `07_AI_Prompt_Guide_Retrofit.md` | Retrofit 搭配 AI：串 Spring Boot 的提示 | AI 互動指南 |
+| 08 | `08_AI_Prompt_Guide_MVVM.md` | MVVM 搭配 AI：ViewModel / LiveData / Repository 提示 | AI 互動指南 |
+| 09 | `09_Retrofit_Tutorial.md` | Retrofit 完整教學：完整程式 + 逐行解釋（含後端） | 完整教材 |
+| — | `Phase2_Learning_Roadmap.md` | 下一階段（Phase 2）學習路線：串後端 + MVVM | 學習路線 |
 
-> 建議用法：**先讀 `01–03` 完整教材照做，再用 `04–06` 讓 AI 產生同一支程式互相對照**，強化理解。
+> 建議用法：**先讀 `01–03` 完整教材照做，再用 `04–08` 讓 AI 產生同一支程式互相對照**，強化理解；`09` 提供 Retrofit 的完整程式與解釋作為對照。
 
 ---
 
@@ -169,6 +173,18 @@
 2. 每章末「自我測驗」先作答再看解答。
 3. 完整範例照貼後**實際 Run 到模擬器驗證**。
 4. 完成後搭配 **`04`–`06` AI 指南**反覆練習與擴充。
+5. 進入 **Phase 2**：參考 `Phase2_Learning_Roadmap.md`（串後端 + MVVM），搭配 `07`（Retrofit 指南）、`09`（Retrofit 完整教學）、`08`（MVVM 指南）。
+6. 延伸閱讀：`Appendix_A`（專案建立）、`Appendix_B`（Lambda）、`Appendix_D`（Gradle）、`Appendix_G`（生命週期）、`Appendix_H`（Swing vs Android）。
 
 ---
 
+## 後續延伸方向（完成三天之後 → Phase 2）
+
+> 完整路線見 **`Phase2_Learning_Roadmap.md`**。
+
+- **網路請求 Retrofit**：以 Java 連結後端 Spring Boot REST API →
+  - 完整教學（有程式+解釋）：`09_Retrofit_Tutorial.md`
+  - AI 提示指南：`07_AI_Prompt_Guide_Retrofit.md`
+- **Jetpack Architecture**：ViewModel、LiveData、MVVM → `08_AI_Prompt_Guide_MVVM.md`
+- **Jetpack Compose**：宣告式 UI（下一學習方向）
+- 範例整合：把 Day 1 的 BMI 計算邏輯搬到 Spring Boot 端，用 Retrofit 串起來（見 `09`）
