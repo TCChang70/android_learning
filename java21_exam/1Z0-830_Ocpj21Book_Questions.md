@@ -1,4 +1,8 @@
-﻿# 1Z0-830 OCP Java SE 21 Developer - Esteban Herrera Study Guide 考題集
+﻿---
+marp: false
+---
+
+# 1Z0-830 OCP Java SE 21 Developer - Esteban Herrera Study Guide 考題集
 
 > 來源：https://github.com/eh3rrera/ocpj21-book （免費 CC BY-NC-SA 4.0 線上書籍 ocpj21.javastudyguide.com）
 > 整理自各章 `## Practice Questions`（題目）與對應 `chXXa.md`（解答與解析），原書為英文內容，本檔保留原文並加中文說明。
