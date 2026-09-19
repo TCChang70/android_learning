@@ -5,14 +5,16 @@ paginate: true
 size: 16:9
 header: 'Day 1：Android（Java + XML）基礎入門 + AI 互動指南'
 style: |
-  section { font-size: 25px; padding: 50px 70px; }
-  h1 { font-size: 40px; }
-  h2 { font-size: 30px; }
-  h3 { font-size: 25px; }
-  pre { font-size: 15px; line-height: 1.4; padding: 12px 16px; }
-  table { font-size: 18px; }
-  blockquote { font-size: 20px; }
-  li { margin: 5px 0; }
+  section { font-size: 25px; padding: 45px 60px; }
+  h1 { font-size: 38px; }
+  h2 { font-size: 28px; }
+  h3 { font-size: 24px; }
+  pre { font-size: 14px; line-height: 1.35; padding: 10px 14px; }
+  code { font-size: 0.9em; }
+  table { font-size: 17px; }
+  blockquote { font-size: 19px; }
+  li { margin: 4px 0; }
+  section:not(:has(h1)) { justify-content: flex-start; }
 ---
 
 <!--
@@ -483,7 +485,315 @@ btnLogV.setOnClickListener(v -> {
 
 ---
 
-# 第 8 章　頁面跳轉預告（Day 2）
+# 第 8 章　完整範例一：常用 View 元件互動展示（完整可執行版）
+
+把第 7 章列的常用 View **一次全用上**。這支 App 沒有「過場動畫」，只有滿滿的「不同 View 用不同方法取值」。
+
+**功能需求**
+
+- `ImageView`：顯示系統內建圖檔，「換圖」按鈕在三張圖間切換
+- `Spinner`（下拉）、`Switch`（開關）、`SeekBar`（進度條）、`RatingBar`（星等）
+- `Button`「全部更新」：一次把全部狀態寫進一支 `TextView`
+
+**怎麼跑**：`File → New → New Project → Empty Views Activity`，專案名 `ViewDemo`，Language 選 **Java**，套件 `com.example.viewdemo`。先貼第①步 `activity_main.xml`，再貼第②步 `MainActivity.java`，直接 Run。
+
+> 關鍵對照：`Adapter` 就是資料與畫面的橋樑，等於 Swing 的 `JList.setModel(...)`。
+
+---
+
+# 第 8 章　活動① activity_main.xml（完整檔・1/3）
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="常用 View 互動展示"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/imgDemo"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:src="@android:drawable/ic_menu_gallery"
+        android:contentDescription="圖片展示" />
+
+    <Button
+        android:id="@+id/btnSwapImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="換圖" />
+```
+
+> 未完，下一頁繼續…
+
+---
+
+# 第 8 章　活動① activity_main.xml（完整檔・2/3）
+
+```xml
+    <Spinner
+        android:id="@+id/spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Switch
+        android:id="@+id/switchDemo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="開關狀態" />
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="100"
+        android:progress="50" />
+
+    <RatingBar
+        android:id="@+id/ratingBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:numStars="5"
+        android:rating="3" />
+```
+
+> 未完，下一頁繼續…
+
+---
+
+# 第 8 章　活動① activity_main.xml（完整檔・3/3）
+
+```xml
+    <Button
+        android:id="@+id/btnUpdateAll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="全部更新" />
+
+    <TextView
+        android:id="@+id/tvResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="結果："
+        android:textSize="16sp" />
+</LinearLayout>
+```
+
+- `@android:drawable/...`：**系統內建資源**，免自建檔
+- `contentDescription`：無障礙（a11y）用的圖片描述
+- `<Spinner>` 需要 **Adapter** 提供選項（`ArrayAdapter`）
+
+---
+
+# 第 8 章　活動② MainActivity.java（完整檔・上 1/4）
+
+```java
+package com.example.viewdemo;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.RatingBar;
+import android.widget.SeekBar;
+import android.widget.Spinner;
+import android.widget.Switch;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.ArrayList;
+import java.util.List;
+```
+
+> 未完，下一頁繼續…
+
+---
+
+# 第 8 章　活動② MainActivity.java（完整檔・上 2/4）
+
+```java
+public class MainActivity extends AppCompatActivity {
+
+    private ImageView imgDemo;
+    private Spinner spinner;
+    private Switch switchDemo;
+    private SeekBar seekBar;
+    private RatingBar ratingBar;
+    private TextView tvResult;
+
+    private int imageIndex = 0;
+    private final int[] images = {
+            android.R.drawable.ic_menu_gallery,
+            android.R.drawable.ic_menu_camera,
+            android.R.drawable.ic_menu_compass
+    };
+```
+
+> 未完，下一頁繼續…
+
+---
+
+# 第 8 章　活動② MainActivity.java（完整檔・上 3/4）
+
+```java
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        imgDemo    = findViewById(R.id.imgDemo);
+        spinner    = findViewById(R.id.spinner);
+        switchDemo = findViewById(R.id.switchDemo);
+        seekBar    = findViewById(R.id.seekBar);
+        ratingBar  = findViewById(R.id.ratingBar);
+        tvResult   = findViewById(R.id.tvResult);
+        Button btnSwapImage = findViewById(R.id.btnSwapImage);
+        Button btnUpdateAll = findViewById(R.id.btnUpdateAll);
+
+        // Spinner：ArrayAdapter 提供選項
+        List<String> options = new ArrayList<>();
+        options.add("蘋果");
+        options.add("香蕉");
+        options.add("柳橙");
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                options);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(spinnerAdapter);
+```
+
+> 未完，仍在前一頁 `onCreate` 內。下一頁寫 lambda 監聽器。
+
+---
+
+# 第 8 章　活動② MainActivity.java（完整檔・上 4/4）
+
+```java
+        // ✅ 單一方法介面 → lambda
+        btnSwapImage.setOnClickListener(v -> {
+            imageIndex = (imageIndex + 1) % images.length;
+            imgDemo.setImageResource(images[imageIndex]);
+            tvResult.setText("已換圖：" + (imageIndex + 1) + "/" + images.length);
+        });
+
+        switchDemo.setOnCheckedChangeListener((buttonView, isChecked) ->
+                tvResult.setText("開關：已" + (isChecked ? "開啟" : "關閉")));
+
+        ratingBar.setOnRatingBarChangeListener((bar, rating, fromUser) ->
+                tvResult.setText("星等：" + rating));
+```
+
+> 未完，仍在前一頁 `onCreate` 內。下一頁繼續寫 anonymous class 監聽器。
+
+---
+
+# 第 8 章　活動② MainActivity.java（完整檔・下 1/2）
+
+```java
+        // ❌ 多個方法介面 → 只能 anonymous class
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                tvResult.setText("選擇：" + parent.getItemAtPosition(position));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tvResult.setText("進度：" + progress + "/" + seekBar.getMax());
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+```
+
+> 未完，下一頁繼續…
+
+---
+
+# 第 8 章　活動② MainActivity.java（完整檔・下 2/2）
+
+```java
+        // 全部更新：一次取回全部狀態
+        btnUpdateAll.setOnClickListener(v -> updateAll());
+    }
+
+    private void updateAll() {
+        String fruit = (String) spinner.getSelectedItem();   // Object → 轉型 String
+        boolean on      = switchDemo.isChecked();            // boolean
+        int progress    = seekBar.getProgress();             // int
+        float rating    = ratingBar.getRating();             // float
+        tvResult.setText("水果：" + fruit + "\n開關：" + (on ? "開啟" : "關閉")
+                + "\n進度：" + progress + "\n星等：" + rating);
+    }
+}
+```
+
+- **Spinner / SeekBar 監聽器有多個方法** → 只能 anonymous class
+- **換圖 / Switch / RatingBar / 按鈕**是單一方法介面 → lambda
+- `updateAll()` 一次示範四種取值型別
+
+---
+
+# 第 8 章　「全部更新」取值型別
+
+| 元件 | 取值方法 | 回傳型別 |
+|---|---|---|
+| Spinner | `spinner.getSelectedItem()` | `Object`，需轉型 `(String)` |
+| Switch | `switchDemo.isChecked()` | `boolean` |
+| SeekBar | `seekBar.getProgress()` | `int` |
+| RatingBar | `ratingBar.getRating()` | `float`（可含半顆，如 3.5） |
+
+> 判定準則：**單一抽象方法介面 → lambda；多方法介面 / 方法覆寫 → 只能寫方法。**
+
+---
+
+# AI 動手做｜常用 View 互動展示（指南 §6-4）
+
+```
+我學到 Android 常用 View，套件 com.example.viewdemo，請幫我產出「常用 View 互動展示」App：
+1. activity_main.xml：
+   - ImageView（120dp，src 用 @android:drawable/ic_menu_gallery）＋「換圖」按鈕
+   - Spinner（蘋果、香蕉、柳橙）＋ Switch「開關狀態」
+   - SeekBar（max=100，progress=50）＋ RatingBar（numStars=5，rating=3）
+   - Button「全部更新」＋ 結果 TextView
+2. MainActivity.java：
+   - Spinner 用 ArrayAdapter，OnItemSelectedListener 用 anonymous class（兩個方法）
+   - 換圖（lambda）、Switch 用 OnCheckedChangeListener（lambda）
+   - SeekBar 用 anonymous class（三個方法）、RatingBar 用 setOnRatingBarChangeListener（lambda）
+   - 「全部更新」取：spinner.getSelectedItem()（轉 String）、isChecked()、getProgress()、getRating()
+ 請特別標明哪些用 lambda、哪些要用 anonymous class。
+```
+
+**驗證**：換圖、選單、開關、進度條、星等、全部更新都要即時顯示。
+
+---
+
+# 第 9 章　頁面跳轉預告（Day 2）
 
 ```java
 Intent intent = new Intent(this, SecondActivity.class);
@@ -498,7 +808,7 @@ startActivity(intent);
 
 ---
 
-# 第 9 章　完整範例一：BMI 計算機
+# 第 10 章　完整範例二：BMI 計算機
 
 **佈局重點（activity_main.xml）**
 
@@ -544,7 +854,7 @@ private void calculateBMI() {
 
 ---
 
-# 第 10 章　完整範例二：溫度轉換器
+# 第 11 章　完整範例三：溫度轉換器
 
 **需求**：輸入溫度；RadioButton 選「C→F」或「F→C」；顯示 2 位小數；空白用 Toast。
 
@@ -593,7 +903,7 @@ private void convert() {
 
 ---
 
-# 第 11 章　完整範例三：登入表單
+# 第 12 章　完整範例四：登入表單
 
 **需求**：帳號、密碼欄；CheckBox「顯示密碼」；判斷 `admin / 1234`；成功 Toast、失敗 AlertDialog。
 
@@ -614,7 +924,7 @@ cbShow.setOnCheckedChangeListener((buttonView, isChecked) -> {
 
 ---
 
-# 第 11 章　登入驗證與 AlertDialog
+# 第 12 章　登入驗證與 AlertDialog
 
 ```java
 private void login() {
@@ -655,112 +965,6 @@ private void login() {
 
 **練習擴充**：用 SharedPreferences 記住上次帳號、錯誤三次鎖定按鈕（Day 3 主題，當預習）。
 **驗證**：admin/1234 → 成功；admin/123 → AlertDialog。
-
----
-
-# 第 12 章　完整範例四：常用 View 元件互動展示
-
-**功能需求**
-
-- `ImageView`：可顯示內建圖檔 + 「換圖」按鈕切換
-- `Spinner`（下拉）、`Switch`（開關）、`SeekBar`（進度條）、`RatingBar`（星等）
-- `Button`「全部更新」：一次把全部值寫進一個 `TextView`
-
-> 這支讓你一次看懂「不同 View 用不同方法取值」：Switch→`boolean`、SeekBar→`int`、RatingBar→`float`。
-
----
-
-# 第 12 章　XML 佈局重點
-
-```xml
-<ImageView android:id="@+id/imgDemo"
-    android:layout_width="120dp" android:layout_height="120dp"
-    android:src="@android:drawable/ic_menu_gallery"
-    android:contentDescription="圖片展示" />
-
-<Spinner android:id="@+id/spinner"
-    android:layout_width="match_parent" android:layout_height="wrap_content" />
-
-<SeekBar android:id="@+id/seekBar" android:max="100" android:progress="50" />
-
-<RatingBar android:id="@+id/ratingBar" android:numStars="5" android:rating="3" />
-```
-
-- `@android:drawable/...`：**系統內建資源**，免自建檔
-- `contentDescription`：無障礙（a11y）用的圖片描述
-- `<Spinner>` 需要 **Adapter** 提供選項（`ArrayAdapter`）
-
----
-
-# 第 12 章　程式重點：lambda vs anonymous 總整理
-
-```java
-// ✅ 單一方法介面 → lambda
-btnSwapImage.setOnClickListener(v -> { ... });           // OnClickListener
-switchDemo.setOnCheckedChangeListener((buttonView, isChecked) -> ...);
-ratingBar.setOnRatingBarChangeListener((bar, rating, fromUser) -> ...);
-
-// ❌ 多方法介面 → 只能 anonymous class
-spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-    @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {...}
-    @Override public void onNothingSelected(AdapterView<?> parent) {}
-});   // 有「兩個方法」
-
-seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() { ... }); // 三個方法
-```
-
----
-
-# 第 12 章　「全部更新」取值型別
-
-| 元件 | 取值方法 | 回傳型別 |
-|---|---|---|
-| Spinner | `spinner.getSelectedItem()` | `Object`，需轉型 `(String)` |
-| Switch | `switchDemo.isChecked()` | `boolean` |
-| SeekBar | `seekBar.getProgress()` | `int` |
-| RatingBar | `ratingBar.getRating()` | `float`（可含半顆，如 3.5） |
-
-> 判定準則：**單一抽象方法介面 → lambda；多方法介面 / 方法覆寫 → 只能寫方法。**
-
----
-
-# 第 12 章　Spinner 設定（ArrayAdapter）
-
-```java
-List<String> options = new ArrayList<>();
-options.add("蘋果"); options.add("香蕉"); options.add("柳橙");
-
-ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
-        this,                                 // Context
-        android.R.layout.simple_spinner_item, // 內建單行樣板
-        options);                             // 資料來源
-spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-spinner.setAdapter(spinnerAdapter);
-```
-
-- `ArrayAdapter` = 「資料 + 每列長相」的橋樑；`setAdapter` 很像 Swing 的 `JList.setModel(...)`
-- `@android:...` 開頭 = 系統內建資源，免自建檔
-
----
-
-# AI 動手做｜常用 View 互動展示（指南 §6-4）
-
-```
-我學到 Android 常用 View，套件 com.example.viewdemo，請幫我產出「常用 View 互動展示」App：
-1. activity_main.xml：
-   - ImageView（120dp，src 用 @android:drawable/ic_menu_gallery）＋「換圖」按鈕
-   - Spinner（蘋果、香蕉、柳橙）＋ Switch「開關狀態」
-   - SeekBar（max=100，progress=50）＋ RatingBar（numStars=5，rating=3）
-   - Button「全部更新」＋ 結果 TextView
-2. MainActivity.java：
-   - Spinner 用 ArrayAdapter，OnItemSelectedListener 用 anonymous class（兩個方法）
-   - 換圖（lambda）、Switch 用 OnCheckedChangeListener（lambda）
-   - SeekBar 用 anonymous class（三個方法）、RatingBar 用 setOnRatingBarChangeListener（lambda）
-   - 「全部更新」取：spinner.getSelectedItem()（轉 String）、isChecked()、getProgress()、getRating()
-請特別標明哪些用 lambda、哪些要用 anonymous class。
-```
-
-**驗證**：換圖、選單、開關、進度條、星等、全部更新都要即時顯示。
 
 ---
 
@@ -880,7 +1084,7 @@ spinner.setAdapter(spinnerAdapter);
 - `LinearLayout` 佈局與 `dp` / `sp` 單位
 - `findViewById` 綁定元件、`setOnClickListener` + lambda 事件處理
 - Toast 訊息
-- **四支可編譯的完整範例**：BMI 計算機、溫度轉換器、登入表單、常用 View 互動展示
+- **四支可編譯的完整範例**：常用 View 互動展示、BMI 計算機、溫度轉換器、登入表單
 - 用 AI 提示產出每一段程式碼、除錯、擴充、出測驗、複習
 
 **明天（Day 2）**：用 `Intent` 跳轉多個畫面、畫面間傳值、ListView / RecyclerView 列表。
