@@ -372,13 +372,14 @@ Log.d("TAG", "這是除錯訊息");
 > 套件名範例：`com.example.toastlog`
 > 目的：把第 6 章教的 Toast 與 Log **實際做成一支可互動 App**：
 > - 點不同的按鈕，看到「短 Toast」vs「長 Toast」的差別
+> - 用 Snackbar 示範新版 Android 官方建議的「前景訊息」（取代被棄用的 setGravity 控位置）
 > - 點按鈕把不同層級的 Log（v/d/i/w/e）寫進 Logcat，並在畫面上顯示「我剛寫了哪一行 Log」
 > - 用一個 `EditText` 當訊息內容，讓 Toast 與 Log 都顯示你的自訂文字
 
 #### 6.1.1 功能需求
 
 - 一支 `EditText` 輸入要顯示的訊息
-- 一支「短 Toast」按鈕、一支「長 Toast」按鈕、一支「Toast 顯示在畫面中央」按鈕
+- 一支「短 Toast」按鈕、一支「長 Toast」按鈕、一支「Snackbar」按鈕（新版建議做法）
 - 五支按鈕對應 Log 的五個層級：`v` (verbose)、`d` (debug)、`i` (info)、`w` (warn)、`e` (error)
 - 一支 `TextView` 顯示「最後一個動作」的說明，方便你對照 Logcat
 
@@ -424,11 +425,11 @@ Log.d("TAG", "這是除錯訊息");
         android:text="長 Toast（3.5 秒）" />
 
     <Button
-        android:id="@+id/btnToastCenter"
+        android:id="@+id/btnSnackbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Toast 顯示在螢幕中央" />
+        android:text="Snackbar 訊息（新版建議）" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -496,13 +497,14 @@ package com.example.toastlog;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.snackbar.Snackbar;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -521,17 +523,24 @@ public class MainActivity extends AppCompatActivity {
         tvResult = findViewById(R.id.tvResult);
         Button btnToastShort = findViewById(R.id.btnToastShort);
         Button btnToastLong = findViewById(R.id.btnToastLong);
-        Button btnToastCenter = findViewById(R.id.btnToastCenter);
+        Button btnSnackbar = findViewById(R.id.btnSnackbar);
         Button btnLogV = findViewById(R.id.btnLogV);
         Button btnLogD = findViewById(R.id.btnLogD);
         Button btnLogI = findViewById(R.id.btnLogI);
         Button btnLogW = findViewById(R.id.btnLogW);
         Button btnLogE = findViewById(R.id.btnLogE);
 
-        // —— Toast：短 / 長 / 置中（單一方法介面 → lambda）——
-        btnToastShort.setOnClickListener(v -> showToast(Toast.LENGTH_SHORT, Gravity.BOTTOM));
-        btnToastLong.setOnClickListener(v -> showToast(Toast.LENGTH_LONG, Gravity.BOTTOM));
-        btnToastCenter.setOnClickListener(v -> showToast(Toast.LENGTH_SHORT, Gravity.CENTER));
+        // —— Toast：短 / 長（位置由系統固定，新版不可再自訂）——
+        btnToastShort.setOnClickListener(v -> showToast(Toast.LENGTH_SHORT));
+        btnToastLong.setOnClickListener(v -> showToast(Toast.LENGTH_LONG));
+        // —— Snackbar：官方建議取代 setGravity 的前景訊息（可附動作按鈕）——
+        btnSnackbar.setOnClickListener(v -> {
+            // android.R.id.content 是畫面根 View，Snackbar 需要一個 View 來定位
+            Snackbar.make(findViewById(android.R.id.content), getMessage(), Snackbar.LENGTH_SHORT)
+                    .setAction("關閉", view -> { })
+                    .show();
+            showResult("已顯示 Snackbar 訊息：" + getMessage());
+        });
 
         // —— Log：五個層級，各自寫一行到 Logcat ——
         btnLogV.setOnClickListener(v -> {
@@ -561,16 +570,13 @@ public class MainActivity extends AppCompatActivity {
         return msg.isEmpty() ? "（未輸入，使用預設文字）" : msg;
     }
 
-    private void showToast(int duration, int gravity) {
+    private void showToast(int duration) {
         String msg = getMessage();
-        Toast toast = Toast.makeText(this, msg, duration);
-        toast.setGravity(gravity, 0, 0);   // 預設是螢幕下方；可改置中
-        toast.show();
+        Toast.makeText(this, msg, duration).show();
 
-        String where = (gravity == Gravity.CENTER) ? "置中" : "下方";
         String len = (duration == Toast.LENGTH_LONG) ? "長(3.5s)" : "短(2s)";
-        Log.i(TAG, "Toast 已顯示，位置=" + where + "，長度=" + len + "：" + msg);
-        showResult("已顯示" + where + "的" + len + " Toast：" + msg);
+        Log.i(TAG, "Toast 已顯示，長度=" + len + "：" + msg);
+        showResult("已顯示" + len + " Toast：" + msg);
     }
 
     private void showResult(String text) {
@@ -583,7 +589,8 @@ public class MainActivity extends AppCompatActivity {
 
 - **Toast 兩種建法**：`Toast.makeText(context, msg, duration)` 會回傳一個 `Toast` 物件，最後要 **`.show()`** 才會顯示。
 - **`Toast.LENGTH_SHORT` / `Toast.LENGTH_LONG`**：控制顯示時間（約 2 秒 / 3.5 秒）。
-- **`toast.setGravity(Gravity.CENTER, 0, 0)`**：可改變 Toast 出現的位置（這裡示範置中）。第二、三參數是 X / Y 偏移量。
+- **`toast.setGravity(...)` 已棄用**：從 Android 11（API 30）起，對 `makeText()` 建立的「文字 Toast」呼叫 `setGravity` 會被系統忽略（Logcat 會印 `setGravity() shouldn't be called on text toasts, the values won't be used`），Toast 位置固定顯示在螢幕下方。
+- **要控位置的訊息改用 `Snackbar`**：`Snackbar.make(View, 文字, 時間).show()`，可加 `.setAction("按鈕文字", 點擊處理)` 加動作按鈕，是官方建議的「前景訊息」做法（新版 Android Studio 專案已內建 `com.google.android.material:material`，直接可用）。
 - **Log 五個層級**：
   - `Log.v`（verbose，最詳細、最低層級）
   - `Log.d`（debug，除錯）
@@ -599,9 +606,9 @@ public class MainActivity extends AppCompatActivity {
 
 | 操作 | 畫面上 | Logcat（搜尋 `ToastLogDemo`） |
 |---|---|---|
-| 輸入「Hello」→ 短 Toast | 下方跳出「Hello」約 2 秒 | `I` 一行「Toast 已顯示…下方…短」 |
+| 輸入「Hello」→ 短 Toast | 下方跳出「Hello」約 2 秒 | `I` 一行「Toast 已顯示…短」 |
 | 長 Toast | 下方跳出約 3.5 秒 | `I` 一行（長度=長） |
-| 中央 Toast | **螢幕中央**跳出 | `I` 一行（位置=置中） |
+| Snackbar 按鈕 | 下方跳出、附「關閉」動作鈕 | 不寫 Log（畫面上顯示已送出 Snackbar） |
 | 按 **D** 按鈕 | 顯示「Log.d 已寫入」 | `D` 一行「這是一條 debug：…」 |
 | 按 **E** 按鈕 | 顯示「Log.e 已寫入」 | `E` 一行「這是一條 error：…」（會顯示成紅色） |
 

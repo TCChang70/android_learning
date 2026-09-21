@@ -106,14 +106,15 @@ Android 的 View.OnClickListener 何時可以用 lambda？何時不能用？
 **提示 4：產生 Toast + Log 展示 App**（對應 Day1 6.1）
 ```
 請幫我寫一個 Android Java App（叫 ToastLogDemo，套件 com.example.toastlog）：
-- activity_main.xml：一個 EditText（輸入訊息）、三顆按鈕「短 Toast / 長 Toast / 置中 Toast」、五顆小按鈕 V D I W E（水平均分寬度）、一個 TextView 顯示最後動作
+- activity_main.xml：一個 EditText（輸入訊息）、三顆按鈕「短 Toast / 長 Toast / Snackbar」、五顆小按鈕 V D I W E（水平均分寬度）、一個 TextView 顯示最後動作
 - MainActivity.java：
-  - Toast.LENGTH_SHORT / LENGTH_LONG、setGravity 置中
+  - 短/長 Toast 用 Toast.LENGTH_SHORT / LENGTH_LONG；第三顆改用 Snackbar 示範新版建議（不要用已棄用的 setGravity）
   - 五顆按鈕分別寫 Log.v/d/i/w/e，TAG 用 "ToastLogDemo"
   - 顯示「我剛做了什麼」到 TextView
 請用 lambda，並把 Log 五個層級的意思說明一下
 ```
 > 實作後請自己在 Logcat 搜尋 `ToastLogDemo` 驗證。
+> 注意：`Toast.setGravity()` 自 API 30（Android 11+）起已棄用，文字 Toast 位置無法再自訂；需要控制位置的訊息改用 `Snackbar`。
 
 ---
 

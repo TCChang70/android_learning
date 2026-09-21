@@ -417,7 +417,7 @@ Log.d("TAG", "這是除錯訊息");
 **功能需求**
 
 - 一支 `EditText` 輸入要顯示的訊息
-- 「短 Toast」「長 Toast」「置中 Toast」三顆按鈕
+- 「短 Toast」「長 Toast」「Snackbar」三顆按鈕
 - 五顆小按鈕 V D I W E → 對應 Log 五個層級
 - 一支 `TextView` 顯示「最後動作」
 
@@ -437,14 +437,14 @@ btnLogV.setOnClickListener(v -> {
 # 6.1 程式與語法重點
 
 - **Toast 兩種建法**：`Toast.makeText(...)` 回傳 `Toast` 物件，最後要 `.show()`
-- **`toast.setGravity(Gravity.CENTER, 0, 0)`**：改變出現位置（X/Y 為偏移量）
+- **Snackbar**：`setGravity` 已在 API 30（Android 11+）棄用，文字 Toast 位置由系統固定；要控位置用 `Snackbar.make(根View, 文字, 時間).show()`（Material，可加 `.setAction(...)`）
 - **Log 五層級**：`v` verbose 最低 → `d` debug → `i` info → `w` warn → `e` error 最高
 - **Logcat 如何看**：Run 之後，下方 Logcat 用左上角層級下拉過濾；搜尋框輸入 `ToastLogDemo`（TAG）
 
 | 操作 | 畫面上 | Logcat（搜尋 TAG） |
 |---|---|---|
 | 短 Toast | 下方 ~2 秒 | `I` 一行 |
-| 中央 Toast | **螢幕中央** | `I`（位置=置中） |
+| Snackbar 按鈕 | 下方跳出、附「關閉」動作鈕 | 不寫 Log |
 | 按 **E** | 顯示已寫入 | `E` 一行（紅色） |
 
 ---
@@ -453,9 +453,9 @@ btnLogV.setOnClickListener(v -> {
 
 ```
 請幫我寫一個 Android Java App（叫 ToastLogDemo，套件 com.example.toastlog）：
-- activity_main.xml：一個 EditText（輸入訊息）、三顆按鈕「短 Toast / 長 Toast / 置中 Toast」、五顆小按鈕 V D I W E（水平均分寬度）、一個 TextView 顯示最後動作
+- activity_main.xml：一個 EditText（輸入訊息）、三顆按鈕「短 Toast / 長 Toast / Snackbar」、五顆小按鈕 V D I W E（水平均分寬度）、一個 TextView 顯示最後動作
 - MainActivity.java：
-  - Toast.LENGTH_SHORT / LENGTH_LONG、setGravity 置中
+  - 短/長 Toast 用 Toast.LENGTH_SHORT / LENGTH_LONG；第三顆改用 Snackbar 示範新版建議（不要用已棄用的 setGravity）
   - 五顆按鈕分別寫 Log.v/d/i/w/e，TAG 用 "ToastLogDemo"
   - 顯示「我剛做了什麼」到 TextView
 請用 lambda，並把 Log 五個層級的意思說明一下
