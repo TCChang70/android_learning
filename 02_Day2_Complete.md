@@ -7,6 +7,21 @@
 
 ---
 
+# Day 2 內容優化建議（教學版）
+
+以下是可直接套用在課程中的優化方向，讓 Day 2 更順、更貼近實作。
+
+1. **先跑最小可動 Demo，再講原理**：每章先給「可執行 20 行版本」，確認學生先看到結果，再回頭拆解 API。
+2. **統一命名規格**：Activity 命名採 `XxxActivity`、按鈕 id 用 `btnXxx`、輸入框用 `etXxx`，減少初學者認知負擔。
+3. **每章加 1 個常見錯誤框**：例如 Manifest 未註冊、`findViewById` id 拼錯、`notifyDataSetChanged()` 忘記呼叫。
+4. **建立「舊寫法 vs 新寫法」固定模板**：像 `startActivityForResult` 與 Result API，讓學生知道維護舊案時怎麼判讀。
+5. **ListView 章節補「自訂動態列」**：不只顯示字串，改成「標題 + 副標題 + 狀態」，更貼近真實 App。
+6. **每個完整範例都附測試腳本**：用「操作 → 預期結果」固定表格，讓助教批改一致。
+7. **章末小練習改成漸進式**：先改文字，再改資料結構，最後改互動（點擊/長按/回傳）。
+8. **先教記憶體版，再預告持久化版**：Day 2 結尾提醒「重開資料會消失」，自然銜接 Day 3 資料庫。
+
+---
+
 # 第 1 章　認識 Activity（多個畫面）
 
 一個 Activity = 一個畫面。要建第二個畫面：
@@ -953,6 +968,255 @@ listView.setOnItemClickListener((parent, view, position, id) ->
 
 > 💡 上面的 ListView + ArrayAdapter 片段，完整可編譯的 ListView App 見 **第 10 章「待辦事項 Todo App」**。
 
+### 6.4 Day 2 教材優化建議（可直接套用）
+
+以下建議能讓 Day 2 從「會做」升級到「做得穩、可維護」：
+
+1. **統一命名規則**：按鈕 `btnXxx`、輸入框 `etXxx`、文字 `tvXxx`、列表 `lvXxx`，降低找元件成本。
+2. **集中管理 Intent key**：避免硬編字串散落各檔案，建議宣告常數：
+
+```java
+public static final String EXTRA_NAME = "extra_name";
+public static final String EXTRA_AGE = "extra_age";
+```
+
+3. **輸入先驗證再跳轉**：`trim()` + `isEmpty()` + 數字轉型例外處理，避免 B 畫面收到髒資料。
+4. **ListView 改用 ArrayList 當資料源**：示範時盡量不用固定陣列，讓學生早點建立「動態資料」心智模型。
+5. **每次資料變動都明確 refresh**：口訣固定成「改資料 -> `notifyDataSetChanged()`」。
+6. **加上空清單狀態**：當資料為空時顯示「目前沒有資料」，避免初次打開畫面一片空白造成誤解。
+7. **點擊與長按行為分工**：點擊看詳細、長按刪除，操作語意清楚，也接近真實商務 App。
+8. **小步驟驗證**：每章節收尾附 2-3 個可操作驗收條件（例如：新增、刪除、旋轉螢幕後狀態），便於自評。
+
+---
+
+## ⭐ 第 6 章加強範例：ListView + 自訂動態清單（客製每一列）
+
+> 目的：不只顯示字串，而是每列顯示「標題 + 副標題 + 狀態」，並支援動態新增、切換完成狀態、刪除。
+> 套件名：`com.example.customlistdemo`。
+
+### A. 單列版面 `row_task.xml`
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:text="任務標題" />
+
+    <TextView
+        android:id="@+id/tvSub"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textSize="14sp"
+        android:text="任務說明" />
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="未完成"
+        android:textStyle="bold" />
+
+</LinearLayout>
+```
+
+### B. 主畫面 `activity_main.xml`
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/etTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="任務標題（例如：完成 Day2 作業）" />
+
+    <EditText
+        android:id="@+id/etSub"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="任務說明（例如：練習 ListView 自訂列）" />
+
+    <Button
+        android:id="@+id/btnAddTask"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="新增任務" />
+
+    <ListView
+        android:id="@+id/lvTask"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="12dp" />
+
+</LinearLayout>
+```
+
+### C. 資料模型 `TaskItem.java`
+
+```java
+public class TaskItem {
+    public String title;
+    public String subtitle;
+    public boolean done;
+
+    public TaskItem(String title, String subtitle, boolean done) {
+        this.title = title;
+        this.subtitle = subtitle;
+        this.done = done;
+    }
+}
+```
+
+### D. 自訂 Adapter `TaskAdapter.java`
+
+```java
+import android.content.Context;
+import android.graphics.Color;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.TextView;
+
+import java.util.List;
+
+public class TaskAdapter extends ArrayAdapter<TaskItem> {
+
+    public TaskAdapter(Context context, List<TaskItem> data) {
+        super(context, 0, data);
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        View view = convertView;
+        if (view == null) {
+            view = LayoutInflater.from(getContext()).inflate(R.layout.row_task, parent, false);
+        }
+
+        TaskItem item = getItem(position);
+        TextView tvTitle = view.findViewById(R.id.tvTitle);
+        TextView tvSub = view.findViewById(R.id.tvSub);
+        TextView tvStatus = view.findViewById(R.id.tvStatus);
+
+        tvTitle.setText(item.title);
+        tvSub.setText(item.subtitle);
+        tvStatus.setText(item.done ? "已完成" : "未完成");
+        tvStatus.setTextColor(item.done ? Color.parseColor("#2E7D32") : Color.parseColor("#C62828"));
+
+        return view;
+    }
+}
+```
+
+### E. 主程式 `MainActivity.java`
+
+```java
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.ArrayList;
+
+public class MainActivity extends AppCompatActivity {
+
+    private final ArrayList<TaskItem> taskData = new ArrayList<>();
+    private TaskAdapter adapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        EditText etTitle = findViewById(R.id.etTitle);
+        EditText etSub = findViewById(R.id.etSub);
+        Button btnAddTask = findViewById(R.id.btnAddTask);
+        ListView lvTask = findViewById(R.id.lvTask);
+
+        taskData.add(new TaskItem("完成 Day2", "練習 Activity 跳轉", false));
+        taskData.add(new TaskItem("整理筆記", "補齊 Intent 傳值重點", true));
+
+        adapter = new TaskAdapter(this, taskData);
+        lvTask.setAdapter(adapter);
+
+        btnAddTask.setOnClickListener(v -> {
+            String title = etTitle.getText().toString().trim();
+            String sub = etSub.getText().toString().trim();
+
+            if (title.isEmpty()) {
+                Toast.makeText(this, "請輸入任務標題", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (sub.isEmpty()) {
+                sub = "（無補充說明）";
+            }
+
+            taskData.add(new TaskItem(title, sub, false));
+            adapter.notifyDataSetChanged();
+            etTitle.setText("");
+            etSub.setText("");
+        });
+
+        lvTask.setOnItemClickListener((parent, view, position, id) -> {
+            TaskItem item = taskData.get(position);
+            item.done = !item.done;
+            adapter.notifyDataSetChanged();
+        });
+
+        lvTask.setOnItemLongClickListener((parent, view, position, id) -> {
+            TaskItem item = taskData.get(position);
+            new AlertDialog.Builder(this)
+                    .setTitle("刪除任務")
+                    .setMessage("確定刪除「" + item.title + "」？")
+                    .setPositiveButton("刪除", (dialog, which) -> {
+                        taskData.remove(position);
+                        adapter.notifyDataSetChanged();
+                    })
+                    .setNegativeButton("取消", null)
+                    .show();
+            return true;
+        });
+    }
+}
+```
+
+### F. 學習重點（教學口訣）
+
+- `TaskItem`：資料模型（每列的資料結構）。
+- `TaskAdapter`：把資料轉成列畫面（`getView` 決定每列長相）。
+- `taskData`：動態資料容器（新增、切換狀態、刪除都改這裡）。
+- `notifyDataSetChanged()`：資料改完一定呼叫，ListView 才會刷新。
+
+### G. 建議驗收
+
+1. 新增任務後，ListView 立即新增一列。
+2. 點擊某列，狀態可在「已完成 / 未完成」來回切換。
+3. 長按某列，出現確認刪除 Dialog，刪除後列表立刻更新。
+
 ---
 
 # 第 7 章　顯示列表：RecyclerView（常用進階）
@@ -969,6 +1233,156 @@ RecyclerView 步驟較多（6 步），稍後在範例中完整示範：
 6. **ItemTouchHelper** 可做滑動刪除（Day 3 範例用）
 
 > 建議：Day 2 先用 ListView 熟概念，Day 3 範例再用 RecyclerView，兩者 Model-Adapter 思維一致。
+
+## ⭐ 第 7 章　完整可直接執行範例：RecyclerView 水果清單 App
+
+> 目的：讓初學者完成第一支 RecyclerView，建立「資料 -> Adapter -> ViewHolder -> RecyclerView」流程。
+> 套件名：`com.example.recyclerbasic`。共 4 支檔案：`activity_main.xml`、`row_item.xml`、`MainActivity.java`、`FruitAdapter.java`。
+
+**Step 0 加入依賴（必要）**：在 `app/build.gradle` 的 `dependencies` 區塊加入：
+
+```groovy
+implementation 'androidx.recyclerview:recyclerview:1.3.2'
+```
+
+同步（Sync Now）後再寫程式。
+
+**Step 1 主畫面 `activity_main.xml`**：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RecyclerView 入門"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="12dp" />
+
+</LinearLayout>
+```
+
+**Step 2 每列版面 `row_item.xml`**：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tvName"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="14dp"
+    android:textSize="18sp" />
+```
+
+**Step 3 Adapter `FruitAdapter.java`**：
+
+```java
+package com.example.recyclerbasic;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.List;
+
+public class FruitAdapter extends RecyclerView.Adapter<FruitAdapter.FruitViewHolder> {
+
+    private final List<String> data;
+
+    public FruitAdapter(List<String> data) {
+        this.data = data;
+    }
+
+    @NonNull
+    @Override
+    public FruitViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_item, parent, false);
+        return new FruitViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull FruitViewHolder holder, int position) {
+        String name = data.get(position);
+        holder.tvName.setText(name);
+        holder.itemView.setOnClickListener(v ->
+                Toast.makeText(v.getContext(), "你點了：" + name, Toast.LENGTH_SHORT).show());
+    }
+
+    @Override
+    public int getItemCount() {
+        return data.size();
+    }
+
+    static class FruitViewHolder extends RecyclerView.ViewHolder {
+        TextView tvName;
+
+        FruitViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvName = itemView.findViewById(R.id.tvName);
+        }
+    }
+}
+```
+
+**Step 4 主程式 `MainActivity.java`**：
+
+```java
+package com.example.recyclerbasic;
+
+import android.os.Bundle;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+
+        ArrayList<String> fruits = new ArrayList<>();
+        fruits.add("蘋果");
+        fruits.add("香蕉");
+        fruits.add("柳橙");
+        fruits.add("葡萄");
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(new FruitAdapter(fruits));
+    }
+}
+```
+
+**Step 5 執行驗收**：
+| 操作 | 預期結果 |
+|---|---|
+| 啟動 App | 顯示 4 筆水果清單 |
+| 點擊任一列 | 顯示 Toast「你點了：水果名」 |
+| 註解掉 `setLayoutManager(...)` 再執行 | 列表會空白（理解為何必須設定） |
+
+> ✅ 你已完成 RecyclerView 最小可執行版本。下一步可加「新增/刪除資料 + `adapter.notifyItemInserted()` / `notifyItemRemoved()`」。
 
 ---
 
@@ -1157,6 +1571,39 @@ public class MainActivity extends AppCompatActivity {
 
 > ✅ 這正是「可增刪的動態清單」。關鍵程式就三行：`data.add(...)`、`data.remove(...)`、`adapter.notifyDataSetChanged()`。
 > 第 10 章「待辦事項 Todo App」是把同樣的 `ArrayList`+`ArrayAdapter` 思維再加上點擊處理、完整包裝成一支正式小專案，可一併參考。
+
+## ⭐ 第 8 章　補充基礎練習：ArrayList 三步驟（新手版）
+
+如果你想先用最小練習熟悉 `ArrayList`，可以照這三步驟：
+
+1. 建立 `ArrayList<String>` 並放 2 筆預設資料。
+2. 點「新增」按鈕後 `add(...)`，再 `notifyDataSetChanged()`。
+3. 長按某列後 `remove(position)`，再 `notifyDataSetChanged()`。
+
+```java
+ArrayList<String> data = new ArrayList<>();
+data.add("第一筆");
+data.add("第二筆");
+
+ArrayAdapter<String> adapter = new ArrayAdapter<>(
+        this,
+        android.R.layout.simple_list_item_1,
+        data);
+listView.setAdapter(adapter);
+
+btnAdd.setOnClickListener(v -> {
+    data.add("新資料");
+    adapter.notifyDataSetChanged();
+});
+
+listView.setOnItemLongClickListener((parent, view, position, id) -> {
+    data.remove(position);
+    adapter.notifyDataSetChanged();
+    return true;
+});
+```
+
+> 只要牢記「改容器 -> 通知刷新」，第 8 章就算完全吃透。
 
 > ⚡ 對照 Swing：Android 的 `notifyDataSetChanged()` ≈ Swing `DefaultListModel` 改動後自動觸發，差別在 Android 需要**手動**呼叫來更新畫面。
 
