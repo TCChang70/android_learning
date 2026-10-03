@@ -14,6 +14,7 @@
 - [3. 畫面間傳值 putExtra / getExtra](#3-畫面間傳值)
 - [4. 回傳結果（新版 Result API vs 舊寫法）](#4-回傳結果)
 - [5. 系統功能 Intent](#5-系統功能-intent)
+- [5.5 常用系統互動畫面（選擇器家族）](#55-常用系統互動畫面選擇器家族)
 - [6. ListView + ArrayAdapter](#6-listview--arrayadapter)
 - [7. RecyclerView + Adapter](#7-recyclerview--adapter)
 - [8. AlertDialog](#8-alertdialog)
@@ -124,6 +125,75 @@ Android Studio 會自動產生 `SecondActivity.java` + `activity_second.xml`，�
    - btnWeb：new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com")) 再 startActivity
    請用 lambda，並 import android.net.Uri。
 ```
+
+---
+
+## 5.5 常用系統互動畫面（選擇器家族）
+
+> 對應 `02_Day2_Complete.md` 第 5.5 章。這一章同時涵蓋「日期 / 時間 / 下拉 / 單選」與「選圖 / 選檔 / 拍照」。
+> 詳細程式與解釋另見 `CH5_5_PickMedia_Study.md`。
+
+**提示 4-1：搞懂 Activity Result API 的核心規則**
+```
+我在學 Android 的 Activity Result API（registerForActivityResult）。
+請用 JFrame 的角度解釋：
+1) 為什麼要從 startActivityForResult 改成 Activity Result API？
+2) 為什麼 ActivityResultLauncher 必須宣告成「欄位」，不能寫在 onCreate() 或按鈕點擊裡？
+3) 若寫在 onCreate() 內會發生什麼錯誤（訊息長怎樣）？
+請附一段「選圖」的最小可編譯範例。
+```
+
+> ⚠️ 關鍵：`registerForActivityResult(...)` 必須在生命週期進入 `RESUMED` 之前完成註冊 → 一律寫成**欄位**。
+
+---
+
+**提示 4-2：產生「預約表單 App」完整範例**（對應 Day2 第 5.5 章，`com.example.formdemo`）
+```
+我學到「預約表單 App」，套件 com.example.formdemo，共 2 支檔案：
+
+1. activity_main.xml：TextView tvResult 顯示結果、Button btnDate「選日期」、Button btnTime「選時間」、
+   Spinner spPeople（人數下拉）、Button btnMeal「選餐點（單選）」
+2. MainActivity.java：
+   - btnDate：用 DatePickerDialog，預設帶入今天的年/月/日，選完顯示 yyyy/MM/dd
+     （注意 Calendar.MONTH 是 0 起始，顯示時要 +1）
+   - btnTime：用 TimePickerDialog，選完顯示 HH:mm
+   - spPeople：ArrayAdapter + android.R.layout.simple_spinner_item，setSelection 要放在 setAdapter 之後
+   - btnMeal：用 AlertDialog.setSingleChoiceItems（String[] items + checkedItem），點選後更新結果
+
+請用 lambda，並在關鍵處加中文註解。
+```
+
+**驗證**：選日期 / 時間、下拉人數、單選餐點後，`tvResult` 同步更新。
+
+---
+
+**提示 4-3：產生「個人頭像挑選 App」完整範例**（對應 Day2 第 5.5 章，`com.example.avatarpicker`）
+```
+我學到「個人頭像挑選 App」，套件 com.example.avatarpicker，共 1 支 Java + 1 個 layout + 2 個 XML 設定：
+
+1. activity_main.xml：ImageView ivPhoto(220dp)、Button btnPickImage「選圖」、
+   Button btnOpenDoc「選檔案」、Button btnTakePhoto「拍照」、TextView tvFile
+2. MainActivity.java：三個 launcher 全部宣告成「欄位」：
+   - PickVisualMedia（舊機備援 GetContent，用 isPhotoPickerAvailable 判斷）
+   - OpenDocument（用 takePersistableUriPermission 持久化）
+   - TakePicture（搭配 FileProvider）
+3. res/xml/file_paths.xml：<external-files-path name="my_images" path="Pictures/" />
+4. AndroidManifest.xml：註冊 androidx.core.content.FileProvider，
+   authorities="com.example.avatarpicker.fileprovider"
+5. 拍照：File.createTempFile 到 getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+   → FileProvider.getUriForFile → launch
+
+請用 lambda 並加中文註解，並提醒：authorities 必須與 getUriForFile 的第二個參數完全一致。
+```
+
+**驗證**：選圖（Android 13+ 系統 Photo Picker、舊機自動退回 GetContent）、選檔（顯示 `content://` Uri）、拍照（照片顯示於 `ImageView`）。
+
+**練習擴充提示**
+```
+請幫這個 App 加上「記住上次選的圖片」：把 Uri 字串存進 SharedPreferences，重開 App 後自動顯示。
+```
+
+> 對照 `CH5_5_PickMedia_Study.md`（5.5 章三選擇器實作學習文件，含完整程式與常見錯誤表）。
 
 ---
 
@@ -261,6 +331,10 @@ Day 2 常見錯誤與你的提問方式：
 | `getIntExtra` 拿不到值 | 「我在 B 端 getIntExtra('age') 拿到 0，但 A 明明有 putExtra 了，為什麼？預設值是甚麼意思？」 |
 | RecyclerView 空白 | 「我的 RecyclerView 跑起來是空的，Adapter 的 getItemCount 回傳多少？幫我檢查 onCreateViewHolder / onBindViewHolder」 |
 | 找不到 RecyclerView import | 「我沒加 recyclerview 依賴，import 不過，請告訴我 build.gradle 要加甚麼並呼叫 Sync」 |
+| `register while RESUMED` 崩潰 | 「我把 registerForActivityResult 寫在 onClick 裡，一按就崩潰出現 register while current state is RESUMED，該怎麼改？」 |
+| 拍照 `Failed to find configured root` | 「拍照時 FileProvider 說 Failed to find configured root，是不是 file_paths.xml 或 authorities 設錯？」 |
+| `FileUriExposedException` | 「我把 Uri.fromFile 傳給相機就拋 FileUriExposedException，該改用什麼？」 |
+| 舊機選不到圖片 | 「舊手機沒有系統 Photo Picker，PickVisualMedia 選不到圖，備援要怎麼寫？」 |
 
 > 貼上**完整錯誤訊息**（含 Logcat）與**你的程式碼**，AI 才能精準除錯。
 
@@ -275,6 +349,8 @@ Day 2 常見錯誤與你的提問方式：
 | **指定新版 / 舊版** | 明確說要用 `registerForActivityResult` 還是 `onActivityResult` |
 | **lambda 界線** | 明確要求「只有單一方法介面用 lambda，覆寫方法用 @Override」 |
 | **提醒依賴** | 用到 RecyclerView 要提醒 AI 附上 build.gradle 依賴 |
+| **生命週期註冊位置** | 要求 `registerForActivityResult` 一律寫成**欄位**（不可放 `onCreate`／點擊內） |
+| **FileProvider 一致性** | 提醒 AI 附 `file_paths.xml` 與 `<provider>`，且 `authorities` 要和 `getUriForFile` 第二參數相同 |
 
 ---
 

@@ -83,11 +83,15 @@
 | 第 2 章 | Intent：啟動新的 Activity | `new Intent(this, SecondActivity.class)`、`startActivity` |
 | 第 3 章 | 畫面間傳遞資料 | `putExtra`/`getExtra`（取代 `showInputDialog`） |
 | 第 4 章 | 回傳結果給前一個畫面 | 新版 Result API vs 舊 `startActivityForResult`；⚠️ `onActivityResult` 不能用 lambda |
-| 第 5 章 | Intent 的其它用法 | 系統 Intent（`ACTION_DIAL`、`ACTION_VIEW`） |
+| 第 5 章 | Intent 的其它用法 | 系統 Intent（`ACTION_DIAL`、`ACTION_VIEW`）+ **常用系統 Intent 速查表**（簡訊 / Email / 分享 / 地圖 / 設定頁） |
+| 第 5.5 章 | 常用系統互動畫面（選擇器家族） | `Spinner`、`DatePickerDialog`、`TimePickerDialog`、`setSingleChoiceItems`、`PickVisualMedia`（選圖）、`OpenDocument`（選檔）、`TakePicture` + `FileProvider`（拍照） |
 | 第 6 章 | 顯示列表：ListView（入門） | `ArrayAdapter`、`simple_list_item_1` |
 | 第 7 章 | 顯示列表：RecyclerView（進階） | `RecyclerView.Adapter` + `ViewHolder` |
 | 第 8 章 | 資料容器：ArrayList | 動態增刪、搭配列表 |
 | 第 9 章 | Dialog：AlertDialog | 流式寫法（取代 JOptionPane） |
+| 第 10 章 | 完整範例：待辦事項 Todo App | ListView + ArrayAdapter + AlertDialog 刪除 |
+| 第 11 章 | 完整範例：商品編輯傳值 | Intent 雙向傳值（新版 Result API） |
+| 第 12 章 | 完整範例：顏色選擇器 | RecyclerView + Adapter + Intent 回傳 |
 
 ### Day 2 完整範例
 
@@ -96,12 +100,14 @@
 | **兩頁面跳轉 (第 2 章)** | 最基本的 `startActivity` 跳轉 |
 | **A→B 傳值 (第 3 章)** | putExtra / getExtra、預設值 |
 | **A⇄B 回傳結果 (第 4 章)** | 新版 Result API + 舊寫法對照 |
-| **系統功能 (第 5 章)** | 撥號、開網頁 |
+| **系統功能 (第 5 章)** | 撥號、開網頁、傳簡訊、開 App 設定頁 |
+| **5.5-1. 預約表單 App (第 5.5 章)** | Spinner + `DatePickerDialog` + `TimePickerDialog` + `setSingleChoiceItems` 四合一 |
+| **5.5-2. 個人頭像挑選 App (第 5.5 章)** | `PickVisualMedia` / `OpenDocument` / `TakePicture` + `FileProvider` |
 | **10. 待辦事項 Todo App** | ListView + ArrayAdapter + ArrayList、長按刪除 |
 | **11. 商品編輯傳值** | Intent + putExtra/getExtra、雙頁面往返 |
 | **12. 顏色選擇器** | RecyclerView + Adapter + Intent 回傳結果 |
 
-- **第 13 章**：自我測驗與解答
+- **第 13 章**：自我測驗與解答（12 題，含第 5.5 章選擇器相關題目）
 - **AI 指南 `05`**：特別強調「新版能 lambda / 舊版不能」的提示界線
 
 ---

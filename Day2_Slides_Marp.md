@@ -1,4 +1,4 @@
----
+﻿---
 marp: true
 theme: default
 paginate: true
@@ -40,7 +40,8 @@ style: |
   - Activity 多畫面、`Intent` 跳轉
   - 畫面間 `putExtra` / `getExtra` 傳值、回傳結果（新舊兩套 API）
   - 系統功能 Intent（撥號、開網頁）
-  - `ListView` / `RecyclerView` 列表 + `ArrayAdapter`
+  - 常用系統互動畫面：日期/時間選擇、`Spinner`、單選/多選、`PickVisualMedia` / `OpenDocument` / `TakePicture`（選擇器家族）
+  - `ListView` / `RecyclerView` 列表 + `ArrayAdapter`、`ArrayList` 動態容器
   - `AlertDialog` 彈窗
   - 三支完整整合範例：Todo App、商品編輯傳值、顏色選擇器
 - ⚡ 與 JFrame 的對照會用 ⚡ 標記
@@ -688,7 +689,175 @@ public class MainActivity extends AppCompatActivity {
    請用 lambda，並 import android.net.Uri。
 ```
 
-> 現在你已會「跳轉 / 傳值 / 回傳 / 呼叫系統」。接著把重點轉到**列表**。
+> 現在你已會「跳轉 / 傳值 / 回傳 / 呼叫系統」。接著認識「挑選系統資產」，再進入**列表**。
+
+---
+
+# 第 5.5 章　常用系統互動畫面（選擇器家族）
+
+| 需求 | 用法 |
+|---|---|
+| 日期選擇 | `DatePickerDialog` |
+| 時間選擇 | `TimePickerDialog` |
+| 下拉選單 | `Spinner` + `ArrayAdapter` |
+| 單選清單 | `AlertDialog.setSingleChoiceItems` |
+| 多選清單 | `AlertDialog.setMultiChoiceItems` |
+| 選圖 | `PickVisualMedia`（新版） |
+| 選檔案 | `OpenDocument` |
+| 拍照 | `TakePicture` + `FileProvider` |
+
+> 第 5 章是「呼叫系統」，這一章是「挑選系統資產」。
+
+---
+
+# 5.5 核心觀念：Activity Result API
+
+- 用「合約（Contract）」描述要做什麼：`PickVisualMedia`、`OpenDocument`、`TakePicture`…
+- 用 `registerForActivityResult(...)` 註冊 `ActivityResultLauncher`，結果回到 callback
+
+> ⚠️ **最重要規則**：`registerForActivityResult(...)` 必須在生命週期進入 `RESUMED` **之前**完成註冊 → 一律寫成**欄位**。
+
+```java
+// 欄位層：建構階段即完成註冊
+private final ActivityResultLauncher<PickVisualMediaRequest> pickMediaLauncher =
+    registerForActivityResult(new PickVisualMedia(), uri -> {
+        if (uri != null) ivPhoto.setImageURI(uri);
+    });
+```
+
+> 寫在按鈕點擊內才註冊 → `IllegalStateException: ... while current state is RESUMED`。
+
+---
+
+# 5.5｜選圖：PickVisualMedia（新版 Photo Picker）
+
+- Android 13（API 33）Photo Picker，AndroidX 向下支援，**不需要** `READ_MEDIA_IMAGES` 權限
+- 依賴：`androidx.activity:activity >= 1.7.0`（建議 1.9.3+）
+
+```java
+// 舊機備援
+private final ActivityResultLauncher<String> getContentLauncher =
+    registerForActivityResult(new GetContent(), uri -> {
+        if (uri != null) ivPhoto.setImageURI(uri);
+    });
+
+btnPick.setOnClickListener(v -> {
+    if (PickVisualMedia.isPhotoPickerAvailable(this)) {
+        pickMediaLauncher.launch(new PickVisualMediaRequest.Builder()
+            .setMediaType(PickVisualMedia.ImageOnly.INSTANCE).build());
+    } else {
+        getContentLauncher.launch("image/*");
+    }
+});
+```
+
+| 合約 | 啟動參數 | 回傳 | 權限 |
+|---|---|---|---|
+| `PickVisualMedia` | `PickVisualMediaRequest` | `Uri?` | 免權限 |
+
+---
+
+# 5.5｜選檔案：OpenDocument
+
+```java
+private final ActivityResultLauncher<String[]> openDocLauncher =
+    registerForActivityResult(new OpenDocument(), uri -> {
+        if (uri != null) {
+            getContentResolver().takePersistableUriPermission(
+                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            tvFile.setText("已選擇：\n" + uri);
+        }
+    });
+
+btnOpen.setOnClickListener(v ->
+    openDocLauncher.launch(new String[]{"application/pdf", "image/*"}));
+```
+
+- 啟動參數是 **`String[]`（MIME types）**：`application/pdf`、`image/*`、`*/*`
+- 重開 App 仍要能讀 → 呼叫 `takePersistableUriPermission`
+
+| 比較 | PickVisualMedia | OpenDocument |
+|---|---|---|
+| 目的 | 挑照片/影片 | 挑任意文件 |
+| 輸入 | `PickVisualMediaRequest` | `String[]`（MIME） |
+| 持久權限 | 系統處理 | 可 `takePersistableUriPermission` |
+
+---
+
+# 5.5｜拍照：TakePicture + FileProvider
+
+1. 建立 `res/xml/file_paths.xml`
+2. `AndroidManifest.xml` 註冊 `<provider>`
+3. 建暫存檔 → `FileProvider.getUriForFile` → `TakePicture`
+4. callback 用該 Uri 顯示圖片
+
+```xml
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-files-path name="my_images" path="Pictures/" />
+</paths>
+
+<provider
+    android:name="androidx.core.content.FileProvider"
+    android:authorities="com.example.takepicturedemo.fileprovider"
+    android:exported="false" android:grantUriPermissions="true">
+    <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/file_paths" />
+</provider>
+```
+
+```java
+File photoFile = File.createTempFile("IMG_", ".jpg",
+    getExternalFilesDir(Environment.DIRECTORY_PICTURES));
+pendingPhotoUri = FileProvider.getUriForFile(
+    this, "com.example.takepicturedemo.fileprovider", photoFile);
+takePictureLauncher.launch(pendingPhotoUri);
+```
+
+> ⚠️ `android:authorities` 必須與 `getUriForFile(..., "此字串", ...)` **完全一致**。
+
+---
+
+# 5.5｜常見錯誤排查 + 驗收清單
+
+| 症狀 | 原因 | 解法 |
+|---|---|---|
+| `register while RESUMED` | 點擊內才註冊 | 改欄位宣告 |
+| `Failed to find configured root` | `file_paths.xml` 沒對應目錄 | 補正確標籤 |
+| 拍照 `IllegalArgumentException` | authorities 不一致 | Manifest ↔ 程式字串一致 |
+| 選不到圖片 | 無 Photo Picker 又沒備援 | `isPhotoPickerAvailable` 切換 `GetContent` |
+| 重開讀不到檔 | 未取持久權限 | `takePersistableUriPermission` |
+| `FileUriExposedException` | 用了 `Uri.fromFile` | 改用 `FileProvider` |
+
+**驗收**：選圖（13+ Photo Picker / 舊機退 `GetContent`）、選檔（顯示 `content://`）、拍照（照片顯示於 `ImageView`）、無 `IllegalStateException` / `FileUriExposedException`。
+
+---
+
+# AI 動手做｜5.5 選擇器家族提示（指南 §5.5）
+
+**提示 4-1：Activity Result API 規則**
+```
+我在學 Android 的 Activity Result API（registerForActivityResult）。
+請用 JFrame 的角度解釋：為什麼要改用 Activity Result API？為什麼 ActivityResultLauncher
+必須宣告成欄位、不能寫在 onCreate() 或按鈕點擊裡？寫在 onCreate() 會出現什麼錯誤？
+請附一段「選圖」的最小可編譯範例。
+```
+
+**提示 4-2：預約表單 App（`com.example.formdemo`）**
+```
+請幫我完成「預約表單 App」，套件 com.example.formdemo：
+btnDate→DatePickerDialog、btnTime→TimePickerDialog、spPeople→Spinner、btnMeal→AlertDialog.setSingleChoiceItems。
+注意 Calendar.MONTH 是 0 起始、顯示要 +1；Spinner 的 setSelection 要放在 setAdapter 之後。用 lambda 並加中文註解。
+```
+
+**提示 4-3：個人頭像挑選 App（`com.example.avatarpicker`）**
+```
+請幫我完成「個人頭像挑選 App」，套件 com.example.avatarpicker：
+三個 launcher 都宣告成欄位——PickVisualMedia（舊機備援 GetContent）、OpenDocument（takePersistableUriPermission）、
+TakePicture + FileProvider（附 file_paths.xml 與 AndroidManifest provider，authorities 要與 getUriForFile 一致）。
+用 lambda 並加中文註解。
+```
+
+> 完整提示見 `05_AI_Prompt_Guide_Day2.md` §5.5。
 
 ---
 
@@ -1594,6 +1763,10 @@ public class ColorListActivity extends AppCompatActivity {
 6. `onActivityResult(...)` 為什麼「不能」寫成 lambda？那 `setOnClickListener(v -> ...)` 為什麼可以？
 7. `ActivityResultLauncher` 為何不能在 `onCreate()` 內部建立？
 8. 改了 `ArrayList` 資料後，不呼叫 `notifyDataSetChanged()` 會怎樣？
+9. 「選圖」與「選檔案」分別該用哪個 API？什麼情況該選用哪一個？
+10. 使用 `FileProvider` 拍照時，`AndroidManifest.xml` 的 `authorities` 與程式碼哪一處必須一致？
+11. 用 `DatePickerDialog` 取得的月份為何要 `+1`？年份需要嗎？
+12. 用 `Spinner` 顯示預設選項時，`setSelection()` 該放在 `setAdapter()` 之前還是之後？為什麼？
 
 ---
 
@@ -1607,8 +1780,12 @@ public class ColorListActivity extends AppCompatActivity {
 | 4 | 資料與 UI 的橋樑——把資料轉成列 View（≈ Swing `ListModel` + `ListCellRenderer`） |
 | 5 | ViewHolder 回收 + LayoutManager，效能更好；**最易忘：`setLayoutManager()`**（忘了列表顯示空白但不崩潰） |
 | 6 | `onActivityResult` 是 Activity **已定義的方法**，只能 `@Override`；`OnClickListener` 是**單一抽象方法介面**，可用 lambda |
-| 7 | 必須在 Activity 準備好之前完成回呼綁定（生命週期限制）；在 `onCreate` 裡建立會拋 `IllegalStateException` |
+| 7 | 必須在 Activity 進入 `RESUMED` 前完成註冊（生命週期限制）；在 `onCreate` 裡建立（Activity 已 `RESUMED`）會拋 `IllegalStateException` |
 | 8 | 資料已改但 UI **不更新**（顯示舊資料），不崩潰但視覺 bug |
+| 9 | 選圖→`PickVisualMedia`（只挑照片/影片、免權限）；選檔→`OpenDocument`（任意文件、可指定 MIME，需要時 `takePersistableUriPermission`） |
+| 10 | 必須與 `FileProvider.getUriForFile(context, authorities, file)` 的第二個參數**完全一致**（慣例 `<套件名>.fileprovider`），否則拋 `IllegalArgumentException` |
+| 11 | `Calendar.MONTH` 是 **0 起始**（0=一月、11=十二月），顯示要 `+1`；年份是正常西元年，**免加** |
+| 12 | 放在 `setAdapter()` **之後**——`Spinner` 必須先有 Adapter（資料）才能定位到指定索引 |
 
 > 判斷準則：**要覆寫既有方法 → 只能寫方法；要實作單一方法的介面 → 可用 lambda**。
 
@@ -1638,8 +1815,10 @@ public class ColorListActivity extends AppCompatActivity {
 - **`putExtra`/`getExtra` 傳值**（senddata 4 支完整檔案）
 - **回傳結果**（新版 `registerForActivityResult` + 舊 `onActivityResult` 對照，含 import）
 - **系統功能 Intent**（撥號、開網頁，記得 `import android.net.Uri`）
+- **第 5.5 章 常用系統互動畫面**（日期/時間選擇、`Spinner`、單選/多選、`PickVisualMedia` / `OpenDocument` / `TakePicture` + `FileProvider`）
 - **`ListView` + `ArrayAdapter`**（listdemo 完整含 import）
 - **`RecyclerView`**（build.gradle 依賴 + 6 步驟 + 完整 Adapter + 最易忘 `setLayoutManager`）
+- **`ArrayList`**（動態容器；改資料後呼叫 `notifyDataSetChanged()`）
 - **`AlertDialog`**（Builder 流式 + `setPositiveButton` lambda 原理）
 - **4 支小範例**（jumpdemo / senddata / resultdemo / sysints，每支含完整 XML + Java + import）
 - **3 支整合範例**（todoapp / shopapp / colorpick，每支含所有檔案的完整可貼代碼）
