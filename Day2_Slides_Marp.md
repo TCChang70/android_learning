@@ -9,7 +9,7 @@ style: |
     h1 { font-size: 30px; }
     h2 { font-size: 25px; }
     h3 { font-size: 20px; }
-    pre { font-size: 9.5px; line-height: 1.2; padding: 5px 9px; }
+    pre { font-size: 14px; line-height: 1.2; padding: 5px 9px; }
     pre code { white-space: pre-wrap; word-break: break-word; }
     table { font-size: 14px; }
     blockquote { font-size: 15px; }
@@ -31,7 +31,7 @@ style: |
 ### 教學內容 + AI 提示互動指南（穿插版）
 
 ---
-
+# Day 2：頁面跳轉與列表（多畫面 App）+ AI 互動指南
 # 本講內容
 
 - 對象：具備 Java / JFrame 經驗，**已完成 Day 1**
@@ -118,16 +118,16 @@ style: |
 
 ---
 
-# AI 動手做｜建立第二個 Activity（指南 §1）
+# AI 動手做｜建立第三個 Activity（指南 §1）
 
 **建立過程通常不需要 AI**：照精靈做，Android Studio 會自動註冊到 `AndroidManifest.xml`。
 
-但可以用 AI 確認「為什麼要註冊、忘了會怎樣」：
+但可以用 AI 確認「建立 ThirdActivity」：
 
 ```
-我用 Android Studio 建立了 SecondActivity，但它不小心沒被註冊到 AndroidManifest.xml，
-請用 JFrame 的角度跟我解釋：1) AndroidManifest.xml 是甚麼？ 2) 沒註冊會發生什麼錯誤？
-3) 怎麼手動補上 <activity android:name=".SecondActivity" />？
+用 Android Studio 建立 ThirdActivity:
+1) 幫我製作 ThirdActivity.java  2) 幫我製作 Activity_Third.xml 包含文字框顯示這是第三個畫面
+3) 怎麼手動補上在AndroidManifest.xml 加入 Activity 宣告
 ```
 
 > 之後的範例都循「New Project → 新增第二個 Activity」的流程，先會跳轉，再學傳值。
@@ -143,6 +143,8 @@ btnGo.setOnClickListener(v -> {
     startActivity(intent);   // 啟動並跳轉
 });
 ```
+
+**🔍 解說**
 
 - `new Intent(出發點, 目的地)`：第一參數 `MainActivity.this`（從哪）、第二參數 `SecondActivity.class`（到哪）
 - `startActivity(intent)`：把意圖交給系統，系統啟動新畫面
@@ -202,6 +204,11 @@ app/
 </LinearLayout>
 ```
 
+**🔍 解說**
+- `LinearLayout` + `orientation="vertical"`：子元件由上往下排；`gravity="center"` 讓整組置中。
+- `TextView` 只負責顯示文字；`Button` 的 `android:id="@+id/btnGo"` 是 Java 端 `findViewById` 的鑰匙。
+- `wrap_content`＝依內容大小；`match_parent`＝填滿父容器。
+
 ---
 
 # ⭐ jumpdemo｜activity_second.xml（畫面 B）
@@ -223,6 +230,10 @@ app/
 
 </LinearLayout>
 ```
+
+**🔍 解說**
+- 第二畫面同樣是「一頁一 XML」，`setContentView(R.layout.activity_second)` 會載入它。
+- 只有 `TextView`、沒有互動元件，所以 `SecondActivity.java` 幾乎不用寫邏輯。
 
 ---
 
@@ -253,6 +264,12 @@ public class MainActivity extends AppCompatActivity {
 }
 ```
 
+**🔍 解說**
+- `extends AppCompatActivity`：Android 的「視窗類別」，`onCreate` 是進入點（≈ `main`）。
+- `setContentView(...)`：把 XML 佈局綁到此 Activity。
+- `findViewById` 用 `R.id.xxx` 取得元件；`setOnClickListener(v -> ...)` 是單一方法介面，可用 lambda。
+- `new Intent(this, SecondActivity.class)` 描述「從我這裡 → 去 SecondActivity」。
+
 ---
 
 # ⭐ jumpdemo｜SecondActivity.java（含 import）
@@ -280,6 +297,10 @@ public class SecondActivity extends AppCompatActivity {
 | 按返回鍵 ⌫ | 回到第一個畫面 |
 
 > ⚠️ 若跳到 B 崩潰，先確認 Manifest 有 `<activity android:name=".SecondActivity" />`。
+
+**🔍 解說**
+- 每個 Activity 都要 `super.onCreate()` → `setContentView(...)` 兩步，少一步會黑屏或崩潰。
+- 這支沒有 `findViewById`，因為畫面 B 只是靜態顯示。
 
 ---
 
@@ -321,6 +342,8 @@ int age = getIntent().getIntExtra("age", 0);
 boolean isStudent = getIntent().getBooleanExtra("isStudent", false);
 ```
 
+**🔍 解說**
+
 - `Intent` 像行李袋；`putExtra` 一件件塞、`getExtra` 一件件拿（key 兩邊要相同）
 - **`getIntExtra` 第二個參數是「預設值」**——沒拿到該 key 就回傳它，不崩潰
 
@@ -350,6 +373,11 @@ boolean isStudent = getIntent().getBooleanExtra("isStudent", false);
         android:layout_height="wrap_content" android:text="傳送並跳到 B"/>
 </LinearLayout>
 ```
+
+**🔍 解說**
+- 兩個 `EditText` 用 `android:id` 讓 Java 端取值；`inputType="number"` 會叫出數字鍵盤。
+- `hint` 是提示文字（使用者輸入後消失）；`layout_marginBottom` 控制元件間距。
+- 按鈕 `btnSend` 是「打包資料 → 跳頁」的入口。
 
 ---
 
@@ -386,6 +414,14 @@ public class SecondActivity extends AppCompatActivity {
 | 張三/30 → 傳送 | B 顯示「你好，張三，今年 30 歲」 |
 |---|---|
 | 只填姓名不填年齡 | B 顯示「年齡 -1」（預設值生效，不崩潰） |
+
+---
+
+# 🔍 解說：senddata（B 端接收）
+
+- `getIntent()` 取得「啟動我的那個 Intent」，再 `getStringExtra("name")` 取出字串。
+- `getIntExtra("age", -1)` 的第二個參數是**預設值**：找不到就回傳 `-1`，不會崩潰。
+- key（`"name"`、`"age"`）兩端必須完全一致，大小寫也算。
 
 ---
 
@@ -427,15 +463,23 @@ public class MainActivity extends AppCompatActivity {
 
 ---
 
+# 🔍 解說：senddata（A 端送出）
+
+- `putExtra(key, value)` 支援 String / int / boolean…，型別要與 `getXxxExtra` 對應。
+- `.trim()` 去掉前後空白，避免使用者誤按空白鍵。
+- `ageText.isEmpty() ? 0 : Integer.parseInt(ageText)`：先防空字串，避免 `NumberFormatException`。
+
+---
+
 # AI 動手做｜提示 2：A → B 傳值 App（指南 §3）
 
 ```
-請幫我完成「A→B 傳值 App」，套件 com.example.senddata，共 4 支檔案：
+請幫我完成「A→C 傳值 App」，套件 com.example.senddataapp，共 4 支檔案：
 
-1. activity_main.xml：標題「傳資料給 B」、EditText etName(姓名)、EditText etAge(inputType="number")、按鈕 btnSend「傳送並跳到 B」
-2. MainActivity.java：按鈕點擊時 intent.putExtra("name", 姓名)、putExtra("age", 年齡 int)，再 startActivity
-3. activity_second.xml：一支置中 TextView tvShow「尚未收到資料」
-4. SecondActivity.java：用 getIntent().getStringExtra("name") 拿姓名、getIntExtra("age", -1) 拿年齡，setText 顯示「你好，xxx，今年 x 歲」
+1. activity_main.xml：標題「傳資料給 C」、新增按鈕 btnSend2「傳送並跳到 C」
+2. MainActivity.java：按鈕2點擊時 intent.putExtra("name", 姓名)、putExtra("age", 年齡 int)，再 startActivity
+3. activity_third.xml：一支置中 TextView tvShow「尚未收到資料」
+4. ThirdActivity.java：用 getIntent().getStringExtra("name") 拿姓名、getIntExtra("age", 0) 拿年齡，setText 顯示「你好，xxx，今年 x 歲」
 
 重點：getIntExtra 的第二個參數是「預設值」。請用 lambda。
 ```
@@ -471,6 +515,8 @@ setResult(RESULT_OK, data);   // 設定結果（還沒送出）
 finish();                     // 關閉 B → 系統把結果送回 A
 ```
 
+**🔍 解說**
+
 - `requestCode`：分辨「是哪次要求」；`resultCode`：B 回的狀態（`RESULT_OK`）
 - ⚠️ **`onActivityResult` 是方法覆寫 → 不能用 lambda**（只能 override）
 
@@ -498,6 +544,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 ```
+
+**🔍 解說**
+- `ActivityResultLauncher` 必須是**欄位**：`registerForActivityResult` 要在 Activity 進入 `RESUMED` 前完成。
+- `StartActivityForResult` 合約：回傳 `ActivityResult`，用 `getResultCode()` / `getData()` 取值。
+- callback 是單一方法介面 → 可用 lambda；`RESULT_OK` 代表 B 端有正常回傳。
 
 ---
 
@@ -527,6 +578,11 @@ public class MainActivity extends AppCompatActivity {
 }
 ```
 
+**🔍 解說**
+- 新版用 `resultLauncher.launch(intent)`；舊版用 `startActivityForResult(intent, 1001)`。
+- `onActivityResult` 是**覆寫既有方法**，只能 `@Override`，不能寫成 lambda。
+- `req == 1001` 辨識「是哪一次要求」；`res == RESULT_OK` 確認 B 端成功回傳。
+
 ---
 
 # ⭐ resultdemo｜activity_main.xml（A 端佈局）
@@ -549,6 +605,11 @@ public class MainActivity extends AppCompatActivity {
 ```
 
 **activity_second.xml**（B 端）：EditText `etFeedback` + Button `btnSendBack`「回傳給 A 並關閉」
+
+**🔍 解說**
+- 兩顆按鈕 `btnLaunchNew` / `btnLaunchOld` 分別示範新舊 API，方便對照。
+- `tvResult` 是結果顯示區，Java 端用 `findViewById(R.id.tvResult)` 綁定。
+- B 端佈局只需 `EditText` + `Button`，重點在回傳邏輯而非畫面。
 
 ---
 
@@ -581,6 +642,14 @@ public class SecondActivity extends AppCompatActivity {
 | 點「新版」→ B 輸入「Hello」→ 回傳 | A 顯示「收到（新版）：Hello」 |
 | 點「舊版」→ B 輸入「Hi」→ 回傳 | A 顯示「收到（舊版）：Hi」 |
 
+---
+
+# 🔍 解說：resultdemo（B 端回傳）
+
+- B 端用「空 Intent」`new Intent()` 只裝回傳資料，不帶 action / component。
+- `setResult(RESULT_OK, data)` 只是「設定」結果；真正送回 A 的是 `finish()`。
+- `RESULT_OK` 是系統常數；A 端用 `resultCode == RESULT_OK` 判斷 B 是否正常回傳。
+
 > 🔑 **新版**：`OnActivityResult` 是**單一方法介面** → 可 lambda；**舊版**：覆寫既有方法 → 只能 `@Override`。
 
 ---
@@ -588,15 +657,16 @@ public class SecondActivity extends AppCompatActivity {
 # AI 動手做｜提示 3：回傳結果、新舊寫法（指南 §4）
 
 ```
-請幫我完成「A↔B 回傳結果 App」，套件 com.example.resultdemo，共 4 支檔案。
+請幫我完成「A↔B 回傳結果 App」
 要同時示範「新版 registerForActivityResult」和「舊 startActivityForResult」兩支按鈕：
 
-1. activity_main.xml：標題、兩個按鈕 btnLaunchNew(新版) 和 btnLaunchOld(舊寫法)、結果 TextView tvResult
+1. activity_main.xml：新增兩個按鈕 btnLaunchNew2(新版) 和 btnLaunchOld2(舊寫法)、結果 TextView tvResult
 2. MainActivity.java：
-   - 新版：ActivityResultLauncher<Intent> lasResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {...}，用 lambda 接結果
-   - 舊版：onActivityResult 覆寫方法，檢查 requestCode == 1001 && resultCode == RESULT_OK（此方法不能用 lambda，請用 @Override）
-3. activity_second.xml：標題、EditText etFeedback、按鈕 btnSendBack「回傳給 A 並關閉」
+   - 新版：ActivityResultLauncher<Intent> lasResult2 = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {...}，用 lambda 接結果
+   - 舊版：onActivityResult 覆寫方法，檢查 requestCode == 1002 && resultCode == RESULT_OK（此方法不能用 lambda，請用 @Override）
+3. activity_second.xml：標題、EditText etFeedback、按鈕 btnSendBack2「回傳給 A 並關閉」
 4. SecondActivity.java：空 Intent new Intent() + putExtra("result", ...) + setResult(RESULT_OK, data) + finish()
+
 
 請特別講解：為什麼新版能 lambda、舊版不能（覆寫方法 vs 單一方法介面）。
 ```
@@ -616,6 +686,8 @@ startActivity(dial);
 Intent web = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com"));
 startActivity(web);
 ```
+
+**🔍 解說**
 
 - `Intent.ACTION_DIAL` / `ACTION_VIEW`：**動作（action）**——「我想做什麼」
 - `Uri.parse(...)`：把文字包成 Android URI（`tel:`、`https:`）
@@ -642,6 +714,10 @@ startActivity(web);
         android:layout_height="wrap_content" android:text="開啟網頁（View）"/>
 </LinearLayout>
 ```
+
+**🔍 解說**
+- 兩顆按鈕各自對應一種 action：`btnDial` → 撥號、`btnWeb` → 開網頁。
+- 按鈕文字用 `android:text`；`id` 供 Java 端綁定點擊事件。
 
 ---
 
@@ -675,6 +751,15 @@ public class MainActivity extends AppCompatActivity {
 | 按「開啟網頁（View）」 | 開啟瀏覽器載入 Google |
 
 > ⚠️ 常見錯誤：忘記 `import android.net.Uri;` → 編譯時 `Uri cannot be resolved`。
+
+---
+
+# 🔍 解說：sysints（系統 Intent）
+
+- `Intent.ACTION_DIAL` 只開撥號畫面、不真撥出，因此**不需要** `CALL_PHONE` 權限。
+- `Intent.ACTION_VIEW` 把 URI 交給系統挑選可處理的 App（瀏覽器、地圖…）。
+- `Uri.parse("tel:...")` / `"https://..."` 的 scheme 決定系統開啟哪類 App。
+- 忘記 `import android.net.Uri;` 會編譯失敗（`Uri cannot be resolved`）。
 
 ---
 
@@ -755,6 +840,12 @@ btnPick.setOnClickListener(v -> {
 |---|---|---|---|
 | `PickVisualMedia` | `PickVisualMediaRequest` | `Uri?` | 免權限 |
 
+**🔍 解說**
+- `isPhotoPickerAvailable(this)`：先判斷裝置有沒有系統 Photo Picker。
+- `PickVisualMedia.ImageOnly.INSTANCE` 限制只挑圖片（另有 `VideoOnly`、`ImageAndVideo`）。
+- 舊機走 `GetContent` 備援，參數 `"image/*"` 是 MIME type。
+- callback 的 `uri` 可能為 `null`（使用者按取消），務必先判斷。
+
 ---
 
 # 5.5｜選檔案：OpenDocument
@@ -781,6 +872,11 @@ btnOpen.setOnClickListener(v ->
 | 目的 | 挑照片/影片 | 挑任意文件 |
 | 輸入 | `PickVisualMediaRequest` | `String[]`（MIME） |
 | 持久權限 | 系統處理 | 可 `takePersistableUriPermission` |
+
+**🔍 解說**
+- `OpenDocument` 的啟動參數是 `String[]`（可同時接受多種 MIME）。
+- `takePersistableUriPermission(...)` 取得持久讀取權，重開 App 仍能讀同一個檔案。
+- `getContentResolver()` 是讀取 `content://` 的入口，之後可用 `openInputStream(uri)`。
 
 ---
 
@@ -814,6 +910,16 @@ takePictureLauncher.launch(pendingPhotoUri);
 ```
 
 > ⚠️ `android:authorities` 必須與 `getUriForFile(..., "此字串", ...)` **完全一致**。
+
+---
+
+# 🔍 解說：TakePicture + FileProvider
+
+- `file_paths.xml` 宣告「哪些資料夾可被 FileProvider 分享」；`path="Pictures/"` 對應 `getExternalFilesDir(...)`。
+- `<provider>` 的 `authorities` 是這個 provider 的唯一識別碼。
+- `File.createTempFile(...)` 先建空檔，再把它的 Uri 交給相機寫入。
+- `pendingPhotoUri` 存成欄位，callback 才知道照片寫到哪裡。
+- `android:authorities` 與 `getUriForFile` 第二參數不一致 → `IllegalArgumentException`。
 
 ---
 
@@ -886,6 +992,8 @@ listView.setOnItemClickListener((parent, view, position, id) ->
         Toast.makeText(this, "你選了：" + items[position], Toast.LENGTH_SHORT).show());
 ```
 
+**🔍 解說**
+
 - `android.R.layout.simple_list_item_1`：**系統內建單行文字樣式**，不用自建 row XML
 - `(parent, view, position, id)` **4 個參數缺一不可**，`position` 是最常用的
 - ⚡ `setAdapter` ≈ `JList.setModel(...)`
@@ -927,6 +1035,15 @@ public class MainActivity extends AppCompatActivity {
 ```
 
 **activity_main.xml** 關鍵結構：垂直 LinearLayout → `TextView`（標題）→ `ListView`（`0dp + weight=1`）。
+
+---
+
+# 🔍 解說：listdemo（ListView 基本盤）
+
+- `ArrayAdapter<>(this, 佈局, 資料)`：把陣列轉成 ListView 的每一列。
+- `simple_list_item_1` 是系統內建單行文字樣式，不用自己寫 row XML。
+- `setOnItemClickListener` 的 4 個參數 `(parent, view, position, id)` 缺一不可，`position` 最常用。
+- `items[position]` 取得被點的那筆資料。
 
 ---
 
@@ -976,6 +1093,11 @@ public class TaskItem {
 
 > 重點：把「一列需要的欄位」集中管理，避免多個平行陣列。
 
+**🔍 解說**
+- 一個 class 代表「一列資料」，欄位就是這一列要顯示的內容。
+- `done` 用 boolean 表示狀態，之後在 Adapter 轉成「已完成 / 進行中」。
+- 集中管理欄位，避免「多個平行陣列」對不上的問題。
+
 ---
 
 # 自訂動態清單｜Step 2：row_task.xml
@@ -999,6 +1121,11 @@ public class TaskItem {
 ```
 
 > 重點：一列三欄位，後續可再加 icon、deadline、priority。
+
+**🔍 解說**
+- 這是「每一列」的外觀，不是整個畫面；由 Adapter 重複 inflate。
+- 三個 `TextView` 各有 id，ViewHolder 才能分別綁定。
+- `layout_height="wrap_content"` 讓列高隨內容自動調整。
 
 ---
 
@@ -1045,6 +1172,15 @@ public class TaskAdapter extends BaseAdapter {
 
 ---
 
+# 🔍 解說：TaskAdapter（ViewHolder）
+
+- 繼承 `BaseAdapter` 要實作 `getCount` / `getItem` / `getItemId` / `getView`。
+- `getView` 是核心：`convertView == null` 才 inflate，否則重用（效能關鍵）。
+- `ViewHolder` + `setTag` / `getTag` 省去每次重找 `findViewById`。
+- `data.get(position)` 取出目前列的資料，再 `setText` 綁到 View。
+
+---
+
 # 自訂動態清單｜Step 4：MainActivity 動態操作
 
 ```java
@@ -1076,6 +1212,10 @@ listView.setOnItemLongClickListener((p, v, position, id) -> {
 ```
 
 口訣：改 `tasks` 後一定 `notifyDataSetChanged()`。
+
+**🔍 解說**
+- `tasks` 是唯一資料來源（Adapter 持同一份引用）；新增 / 刪除 / 改狀態後都要 `notifyDataSetChanged()`。
+- `setOnItemLongClickListener` 回傳 `true` 表示事件已處理，避免再觸發點擊。
 
 ---
 
@@ -1176,6 +1316,11 @@ implementation 'androidx.recyclerview:recyclerview:1.3.2'
     android:layout_height="wrap_content" android:padding="14dp" android:textSize="18sp"/>
 ```
 
+**🔍 解說**
+- RecyclerView 只是「容器」，實際排列由 `LayoutManager` 決定。
+- `0dp + layout_weight="1"` 讓列表填滿標題以外的空間。
+- `row_item.xml` 是最小單列：一個 `TextView`，由 Adapter inflate。
+
 ---
 
 # recyclerbasic｜FruitAdapter.java（核心）
@@ -1213,6 +1358,15 @@ public class FruitAdapter extends RecyclerView.Adapter<FruitAdapter.FruitViewHol
 
 ---
 
+# 🔍 解說：FruitAdapter（RecyclerView）
+
+- `onCreateViewHolder`：建立「列的殼」（inflate row_item），只做一次。
+- `onBindViewHolder`：把資料塞進殼，捲動時會反覆呼叫（重用 ViewHolder）。
+- `getItemCount`：告訴 RecyclerView 有幾筆資料。
+- `ViewHolder` 快取 `TextView`，避免每次 `findViewById`。
+
+---
+
 # recyclerbasic｜MainActivity.java + 驗收
 
 ```java
@@ -1230,6 +1384,11 @@ recyclerView.setAdapter(new FruitAdapter(fruits));
 | 點擊任一列 | 顯示 Toast「你點了：水果名」 |
 | 忘記 `setLayoutManager` | 列表空白（最常見初學錯誤） |
 
+**🔍 解說**
+- `setLayoutManager(new LinearLayoutManager(this))` 決定「垂直列表」；**忘記就空白**。
+- `setAdapter(...)` 才把資料接上 RecyclerView。
+- `ArrayList` 是資料來源，之後改資料要 `notifyDataSetChanged()`。
+
 ---
 
 # 第 8 章　資料容器：ArrayList（取代陣列）
@@ -1242,6 +1401,8 @@ todoList.add("練習 Intent");
 // 改動資料後 → 通知畫面重繪
 adapter.notifyDataSetChanged();
 ```
+
+**🔍 解說**
 
 - `ArrayList` 可動態增刪、方便與 `ArrayAdapter` 搭配，是清單 App 的主角
 - **記憶口訣：「改容器 → `notifyDataSetChanged()`」**——不管新增或刪除，最後都要呼叫，畫面才會更新
@@ -1274,6 +1435,11 @@ adapter.notifyDataSetChanged();
         android:layout_weight="1"/>
 </LinearLayout>
 ```
+
+**🔍 解說**
+- 上方水平 `LinearLayout`：`EditText` 用 `0dp + weight=1` 撐滿，按鈕靠右。
+- 下方 `ListView` 用 `0dp + weight=1` 吃掉剩餘高度。
+- 所有元件都有 `id`，Java 端才能 `findViewById`。
 
 ---
 
@@ -1314,6 +1480,15 @@ public class MainActivity extends AppCompatActivity {
 
 ---
 
+# 🔍 解說：arraydemo（MainActivity）
+
+- `data` 與 `adapter` 都是欄位，讓點擊事件與其他方法共用同一份資料。
+- 新增：檢查空白 → `data.add` → `notifyDataSetChanged` → 清空輸入框。
+- 長按：`AlertDialog` 確認後 `data.remove(position)`，再刷新。
+- `setOnItemLongClickListener` 回傳 `true`，事件才不會被點擊事件吃掉。
+
+---
+
 # ⭐ 第 8 章　範例實作：ArrayList 三步驟（基礎）
 
 ```java
@@ -1339,6 +1514,11 @@ listView.setOnItemLongClickListener((parent, view, position, id) -> {
 
 重點口訣：改 `ArrayList` 後，必須 `notifyDataSetChanged()`。
 
+**🔍 解說**
+- 步驟 1：建立 `ArrayList` 並放入初始資料。
+- 步驟 2：`ArrayAdapter` 包住同一份 list，`setAdapter` 接上 ListView。
+- 步驟 3：新增 / 刪除後 `notifyDataSetChanged()`，畫面才會更新。
+
 ---
 
 # 第 9 章　Dialog：AlertDialog（取代 JOptionPane 彈窗）
@@ -1353,6 +1533,8 @@ new AlertDialog.Builder(this)
         .setNegativeButton("取消", null)
         .show();
 ```
+
+**🔍 解說**
 
 - **流式（Builder）寫法**：一行串一行「組裝」，最後 `.show()` 才彈出
 - `setPositiveButton("確定", (dialog, which) -> {...})`：第二參數是 `DialogInterface.OnClickListener`（**單一方法介面 → lambda**）
@@ -1408,6 +1590,14 @@ new AlertDialog.Builder(this)
 
 ---
 
+# 🔍 解說：todoapp（佈局重點）
+
+- 標題 `TextView` 用背景色 `#E3F2FD` 做出區塊感。
+- 水平列：`EditText` 用 `0dp + weight=1`，按鈕固定寬度靠右。
+- `ListView` 用 `0dp + weight=1` 填滿剩餘空間。
+
+---
+
 # ⭐ todoapp｜MainActivity.java（完整含 import）
 
 ```java
@@ -1454,6 +1644,15 @@ public class MainActivity extends AppCompatActivity {
 
 ---
 
+# 🔍 解說：todoapp（MainActivity）
+
+- `todoList` / `adapter` 是欄位，新增與刪除共用同一份資料。
+- `ArrayAdapter` 直接包住 `todoList`（同一份引用），所以 `add/remove` 後只要刷新。
+- 新增流程：trim → 空白 Toast → add → `notifyDataSetChanged` → 清空輸入。
+- 刪除流程：點列 → AlertDialog → 確定後 remove → 刷新。
+
+---
+
 # ⭐ todoapp｜驗收重點
 
 | 測試 | 預期 |
@@ -1492,7 +1691,19 @@ public class MainActivity extends AppCompatActivity {
 
 **🔧 建立步驟**：① New Project → `com.example.shopapp` ② 右鍵套件 → `New > Activity` → 命名 `EditActivity`
 
-**MainActivity.java**（A 端，含 import）：
+**4 支檔案**
+```
+app/
+├── java/com.example.shopapp/MainActivity.java   ← A 端：顯示 + 啟動 B
+├── java/com.example.shopapp/EditActivity.java   ← B 端：編輯 + 回傳
+├── res/layout/activity_main.xml                 ← A 端畫面
+└── res/layout/activity_edit.xml                 ← B 端畫面
+```
+
+---
+
+# ⭐ shopapp｜MainActivity.java（A 端，含 import）
+
 ```java
 package com.example.shopapp;
 import android.content.Intent; import android.os.Bundle;
@@ -1528,7 +1739,15 @@ public class MainActivity extends AppCompatActivity {
 
 ---
 
-# ⭐ shopapp｜EditActivity.java + 佈局（B 端）
+# 🔍 解說：shopapp（A 端閉環）
+
+- `goodsName` / `goodsPrice` 是 A 端保存的狀態，按「編輯」時用 `putExtra` 帶給 B。
+- `resultLauncher` 必須是欄位，callback 收到 B 回傳的 name/price 後更新 `tvInfo`。
+- `resultLauncher.launch(intent)` 啟動 B 並等待結果。
+
+---
+
+# ⭐ shopapp｜activity_edit.xml（B 端佈局）
 
 **activity_edit.xml**（B 端輸入）：
 ```xml
@@ -1542,6 +1761,10 @@ public class MainActivity extends AppCompatActivity {
         android:layout_height="wrap_content" android:text="儲存並返回"/>
 </LinearLayout>
 ```
+
+---
+
+# ⭐ shopapp｜EditActivity.java（B 端邏輯）
 
 **EditActivity.java**（B 端邏輯，含 import）：
 ```java
@@ -1575,6 +1798,15 @@ public class EditActivity extends AppCompatActivity {
 |---|---|
 | 按「編輯商品」→ 改「平板/12900」→ 儲存 | A 顯示「商品：平板 / 價格：12900」 |
 | B 端清空欄位 → 儲存 | Toast「請填寫所有欄位」，不關閉 |
+
+---
+
+# 🔍 解說：shopapp（B 端編輯）
+
+- B 端先用 `getStringExtra` 讀 A 帶來的初值，填入 `EditText`。
+- `if (initName != null)` 是防呆：沒有初值時不要覆蓋。
+- 儲存時用「空 Intent」只裝回傳資料 → `setResult(RESULT_OK, data)` → `finish()`。
+- `finish()` 關閉 B，系統才會把結果送回 A 的 callback。
 
 ---
 
@@ -1617,7 +1849,10 @@ public class ColorData {
 }
 ```
 
-**row_color.xml**（單列樣式，New > Layout Resource File）：
+---
+
+# ⭐ colorpick｜row_color.xml（單列樣式）
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -1630,6 +1865,11 @@ public class ColorData {
         android:textSize="18sp"/>
 </LinearLayout>
 ```
+
+**🔍 解說**
+- `ColorData` 用 `public final` 欄位，建立後不可改，適合當唯讀資料模型。
+- `row_color.xml` 是單列：左邊色塊 `View`、右邊文字 `TextView`。
+- 色塊背景之後由 Adapter 用 `setBackgroundColor` 動態設定。
 
 ---
 
@@ -1679,6 +1919,15 @@ public class ColorAdapter extends RecyclerView.Adapter<ColorAdapter.ColorViewHol
 
 ---
 
+# 🔍 解說：ColorAdapter
+
+- `OnColorClick` 是自訂 functional interface（單一方法），所以可用 lambda 傳入。
+- `onBindViewHolder` 把 `ColorData` 的名稱/色碼綁到列上。
+- `Color.parseColor(c.hex)` 把 `#RRGGBB` 轉成顏色。
+- `itemView.setOnClickListener` 回呼 `listener.onColorClick(c)`，把選擇傳回 Activity。
+
+---
+
 # ⭐ colorpick｜ColorListActivity.java + MainActivity.java
 
 **ColorListActivity.java**（B 端，含 import）：
@@ -1712,6 +1961,15 @@ public class ColorListActivity extends AppCompatActivity {
 |---|---|
 | 啟動 → 灰塊「尚未選擇」 | ✅ |
 | 選「紅色」→ 回 A | 色塊變紅，顯示「紅色 (#FF0000)」 |
+
+---
+
+# 🔍 解說：colorpick（回傳選色）
+
+- `setLayoutManager(new LinearLayoutManager(this))` 是 RecyclerView 顯示的必要步驟。
+- `ColorAdapter(colors, color -> {...})` 的 lambda 就是「被點選時要做的事」。
+- B 端用 `setResult(RESULT_OK, data)` + `finish()` 把選色送回 A。
+- A 端在 `colorLauncher` callback 用 `Color.parseColor(hex)` 更新色塊。
 
 ---
 
@@ -1823,11 +2081,7 @@ public class ColorListActivity extends AppCompatActivity {
 - **4 支小範例**（jumpdemo / senddata / resultdemo / sysints，每支含完整 XML + Java + import）
 - **3 支整合範例**（todoapp / shopapp / colorpick，每支含所有檔案的完整可貼代碼）
 
-**本日重點操作清單**：
-1. 新增 Activity → 右鍵套件 → `New > Activity > Empty Views Activity`
-2. 宣告 `ActivityResultLauncher` → **欄位層**，不在 `onCreate` 裡
-3. 改 `ArrayList` 後 → 一定呼叫 `notifyDataSetChanged()`
-4. RecyclerView → 別忘 `setLayoutManager()` + `build.gradle` 依賴
+**本日重點操作清單**：① 新增 Activity（右鍵套件）② `ActivityResultLauncher` 宣告在**欄位層** ③ 改 `ArrayList` 後呼叫 `notifyDataSetChanged()` ④ RecyclerView 別忘 `setLayoutManager()` + `build.gradle` 依賴
 
 **明天（Day 3）**：用 SharedPreferences、SQLite/Room 把資料「永久存起來」，完成記帳 App。
 
