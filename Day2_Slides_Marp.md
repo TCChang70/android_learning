@@ -39,7 +39,7 @@ style: |
 - 今天會學到：
   - Activity 多畫面、`Intent` 跳轉
   - 畫面間 `putExtra` / `getExtra` 傳值、回傳結果（新舊兩套 API）
-  - 系統功能 Intent（撥號、開網頁）
+  - 系統功能 Intent（撥號、開網頁；進階 `ACTION_CALL` 直接撥號 + 執行時期權限）
   - 常用系統互動畫面：日期/時間選擇、`Spinner`、單選/多選、`PickVisualMedia` / `OpenDocument` / `TakePicture`（選擇器家族）
   - `ListView` / `RecyclerView` 列表 + `ArrayAdapter`、`ArrayList` 動態容器
   - `AlertDialog` 彈窗
@@ -763,6 +763,101 @@ public class MainActivity extends AppCompatActivity {
 
 ---
 
+# ⭐ sysints｜進階：`ACTION_CALL` 直接撥號（需權限）
+
+> `ACTION_DIAL` 只把號碼帶到撥號畫面；`ACTION_CALL` 會**直接撥出** → 必須有 `CALL_PHONE`（危險權限，API 23+ 要執行時期申請）。
+
+| action | 行為 | 權限 |
+|---|---|---|
+| `ACTION_DIAL` | 開撥號畫面、號碼已帶入，使用者再按撥出 | 不需要 |
+| `ACTION_CALL` | 立刻撥出 | `CALL_PHONE` |
+
+**AndroidManifest.xml**（`<manifest>` 內、`<application>` 之前）：
+```xml
+<uses-permission android:name="android.permission.CALL_PHONE" />
+```
+
+```java
+private static final int PERMISSION_REQUEST_CALL_PHONE = 1;
+private String phoneNumber = "tel:0931111456";   // 換成你的號碼
+
+btnDial.setOnClickListener(v -> checkAndMakeCall());
+
+// 1. 有權限就直接撥；沒有就跳出系統權限對話框
+private void checkAndMakeCall() {
+    if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
+            != PackageManager.PERMISSION_GRANTED) {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.CALL_PHONE},
+                PERMISSION_REQUEST_CALL_PHONE);
+    } else {
+        makePhoneCall();
+    }
+}
+```
+
+---
+
+# ⭐ sysints｜進階：撥號 + 權限回呼
+
+```java
+import android.Manifest; import android.content.pm.PackageManager;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat; import androidx.core.content.ContextCompat;
+
+// 2. 真正撥出（ACTION_CALL 一定要先確認權限，否則 lint 標紅）
+private void makePhoneCall() {
+    Intent intent = new Intent(Intent.ACTION_CALL);
+    intent.setData(Uri.parse(phoneNumber));
+    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
+            == PackageManager.PERMISSION_GRANTED) {
+        startActivity(intent);
+    }
+}
+
+// 3. 使用者在權限對話框按「允許 / 拒絕」後回到這裡
+@Override
+public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                       @NonNull int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    if (requestCode == PERMISSION_REQUEST_CALL_PHONE) {
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            makePhoneCall();                       // 允許 → 撥出
+        } else {
+            Toast.makeText(this, "需要電話權限才能直接撥打電話", Toast.LENGTH_SHORT).show();
+        }
+    }
+}
+```
+
+---
+
+# 🔍 解說：`ACTION_CALL` 與執行時期權限
+
+- `ACTION_DIAL` vs `ACTION_CALL`：前者**只開撥號畫面**（免權限），後者**直接撥出**（要 `CALL_PHONE`）。
+- `ContextCompat.checkSelfPermission(...)`：回傳 `PERMISSION_GRANTED` / `PERMISSION_DENIED`；用 `ContextCompat` 是為了向下相容。
+- `ActivityCompat.requestPermissions(this, String[], requestCode)`：**非同步**，立刻返回；結果要到 `onRequestPermissionsResult` 才拿得到。
+- `requestCode`（例：`1`）是「這是哪一次請求」的識別碼，請求與回呼兩邊必須一致。
+- `onRequestPermissionsResult` 是**覆寫方法** → 只能 `@Override`，不能寫成 lambda；且要先呼叫 `super.…`。
+- `grantResults.length > 0` 是防呆：使用者按返回鍵時陣列可能為空，直接取 `[0]` 會 `ArrayIndexOutOfBoundsException`。
+- `makePhoneCall()` 內再檢查一次：Android Studio 對 `ACTION_CALL` 會檢查「是否先驗證權限」，沒寫會標紅 `MissingPermission`。
+
+---
+
+# ⭐ sysints｜`ACTION_CALL` 常見錯誤與驗收
+
+| 症狀 | 原因 | 解法 |
+|---|---|---|
+| `SecurityException: Permission Denial ... CALL_PHONE` | Manifest 沒宣告，或使用者拒絕後仍呼叫 | 補 `<uses-permission>`；呼叫前先 `checkSelfPermission` |
+| 按了按鈕完全沒反應 | `requestCode` 兩邊不一致 | 請求與回呼用同一個常數 |
+| 回呼沒有進來 | `onRequestPermissionsResult` 簽章打錯 | 用 IDE 自動覆寫（`@Override`） |
+| `ArrayIndexOutOfBoundsException` | 沒判斷 `grantResults.length` | 先 `length > 0` 再取 `[0]` |
+| 模擬器撥不出去 | 模擬器沒有電信服務 | 用實機測試，或改 `ACTION_DIAL` |
+
+**驗收**：首次按「撥號」跳權限對話框 → 允許後直接撥出 `0931111456`；拒絕則 Toast 提示且不崩潰。
+
+---
+
 # AI 動手做｜提示 4：系統功能 App（指南 §5）
 
 ```
@@ -773,6 +868,8 @@ public class MainActivity extends AppCompatActivity {
    - btnWeb：new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com")) 再 startActivity
    請用 lambda，並 import android.net.Uri。
 ```
+
+**進階挑戰**：把 `btnDial` 改成「一鍵直接撥出」→ `ACTION_CALL` + `CALL_PHONE` 執行時期權限（做法見上一節）。
 
 > 現在你已會「跳轉 / 傳值 / 回傳 / 呼叫系統」。接著認識「挑選系統資產」，再進入**列表**。
 
