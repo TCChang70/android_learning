@@ -308,18 +308,20 @@ public class MainActivity extends AppCompatActivity {
 ```
 
 > ⚠️ `android:authorities` 必須與程式碼中 `FileProvider.getUriForFile(..., "此字串", ...)` **完全一致**，
-> 否則會拋 `IllegalArgumentException: Failed to find configured root`。
+> 不一致時常見 `IllegalArgumentException: Couldn't find meta-data for provider`；若目錄未納入 `file_paths.xml`，則會出現 `Failed to find configured root`。
 
 ### D-5　完整程式碼
 
 ```java
 package com.example.takepicturedemo;
 
+import android.content.ActivityNotFoundException;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts.TakePicture;
@@ -327,17 +329,27 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
 import java.io.File;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String STATE_PHOTO_URI = "photo_uri";
+    private static final String STATE_PHOTO_PATH = "photo_path";
+
     private ImageView ivPhoto;
-    private Uri pendingPhotoUri;   // 拍照要寫入的目標 Uri
+    private Uri pendingPhotoUri;
+    private File pendingPhotoFile;
 
     private final ActivityResultLauncher<Uri> takePictureLauncher =
         registerForActivityResult(new TakePicture(), success -> {
             if (success && pendingPhotoUri != null) {
                 ivPhoto.setImageURI(pendingPhotoUri);
+            } else {
+                deletePendingPhoto();
+                Toast.makeText(this, "未拍照或已取消", Toast.LENGTH_SHORT).show();
             }
+            pendingPhotoUri = null;
+            pendingPhotoFile = null;
         });
 
     @Override
@@ -348,25 +360,58 @@ public class MainActivity extends AppCompatActivity {
         ivPhoto = findViewById(R.id.ivPhoto);
         Button btnTake = findViewById(R.id.btnTakePhoto);
 
-        btnTake.setOnClickListener(v -> {
-            try {
-                // 1. 在私有圖片目錄建立一個暫存檔
-                File photoFile = File.createTempFile(
-                    "IMG_", ".jpg",
-                    getExternalFilesDir(Environment.DIRECTORY_PICTURES));
+        if (savedInstanceState != null) {
+            String uri = savedInstanceState.getString(STATE_PHOTO_URI);
+            String path = savedInstanceState.getString(STATE_PHOTO_PATH);
+            if (uri != null) pendingPhotoUri = Uri.parse(uri);
+            if (path != null) pendingPhotoFile = new File(path);
+        }
 
-                // 2. 換成 FileProvider 的安全 Uri（authorities 必須與 Manifest 一致）
-                pendingPhotoUri = FileProvider.getUriForFile(
-                    this,
-                    "com.example.takepicturedemo.fileprovider",
-                    photoFile);
+        btnTake.setOnClickListener(v -> takePhoto());
+    }
 
-                // 3. 啟動相機
-                takePictureLauncher.launch(pendingPhotoUri);
-            } catch (Exception e) {
-                e.printStackTrace();
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        if (pendingPhotoUri != null) {
+            outState.putString(STATE_PHOTO_URI, pendingPhotoUri.toString());
+        }
+        if (pendingPhotoFile != null) {
+            outState.putString(STATE_PHOTO_PATH, pendingPhotoFile.getAbsolutePath());
+        }
+        super.onSaveInstanceState(outState);
+    }
+
+    private void takePhoto() {
+        File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (dir == null || (!dir.isDirectory() && !dir.mkdirs())) {
+            Toast.makeText(this, "找不到可儲存的圖片目錄", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        File photoFile = null;
+        try {
+            photoFile = File.createTempFile("IMG_", ".jpg", dir);
+            Uri photoUri = FileProvider.getUriForFile(
+                this, "com.example.takepicturedemo.fileprovider", photoFile);
+            pendingPhotoFile = photoFile;
+            pendingPhotoUri = photoUri;
+            takePictureLauncher.launch(photoUri);
+        } catch (IOException | IllegalArgumentException | ActivityNotFoundException
+                | SecurityException e) {
+            if (photoFile != null && photoFile.exists() && !photoFile.delete()) {
+                Toast.makeText(this, "無法清除未完成的照片檔", Toast.LENGTH_SHORT).show();
             }
-        });
+            pendingPhotoFile = null;
+            pendingPhotoUri = null;
+            Toast.makeText(this, "開啟相機失敗：" + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void deletePendingPhoto() {
+        if (pendingPhotoFile != null && pendingPhotoFile.exists()
+                && !pendingPhotoFile.delete()) {
+            Toast.makeText(this, "無法清除未完成的照片檔", Toast.LENGTH_SHORT).show();
+        }
     }
 }
 ```
@@ -398,6 +443,7 @@ public class MainActivity extends AppCompatActivity {
 ```java
 package com.example.mediapickerdemo;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -405,6 +451,7 @@ import android.os.Environment;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
@@ -416,12 +463,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
 import java.io.File;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final String STATE_PHOTO_URI = "photo_uri";
+    private static final String STATE_PHOTO_PATH = "photo_path";
 
     private ImageView ivPhoto;
     private TextView tvFile;
     private Uri pendingPhotoUri;
+    private File pendingPhotoFile;
 
     // ① 選圖（新版）
     private final ActivityResultLauncher<PickVisualMediaRequest> pickMediaLauncher =
@@ -450,7 +502,11 @@ public class MainActivity extends AppCompatActivity {
         registerForActivityResult(new TakePicture(), success -> {
             if (success && pendingPhotoUri != null) {
                 ivPhoto.setImageURI(pendingPhotoUri);
+            } else {
+                deletePendingPhoto();
             }
+            pendingPhotoUri = null;
+            pendingPhotoFile = null;
         });
 
     @Override
@@ -460,6 +516,13 @@ public class MainActivity extends AppCompatActivity {
 
         ivPhoto = findViewById(R.id.ivPhoto);
         tvFile  = findViewById(R.id.tvFile);
+
+        if (savedInstanceState != null) {
+            String uri = savedInstanceState.getString(STATE_PHOTO_URI);
+            String path = savedInstanceState.getString(STATE_PHOTO_PATH);
+            if (uri != null) pendingPhotoUri = Uri.parse(uri);
+            if (path != null) pendingPhotoFile = new File(path);
+        }
 
         findViewById(R.id.btnPickImage).setOnClickListener(v -> {
             if (PickVisualMedia.isPhotoPickerAvailable(this)) {
@@ -476,16 +539,47 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnTakePhoto).setOnClickListener(v -> takePhoto());
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        if (pendingPhotoUri != null) {
+            outState.putString(STATE_PHOTO_URI, pendingPhotoUri.toString());
+        }
+        if (pendingPhotoFile != null) {
+            outState.putString(STATE_PHOTO_PATH, pendingPhotoFile.getAbsolutePath());
+        }
+        super.onSaveInstanceState(outState);
+    }
+
     private void takePhoto() {
+        File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (dir == null || (!dir.isDirectory() && !dir.mkdirs())) {
+            Toast.makeText(this, "找不到可儲存的圖片目錄", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        File photoFile = null;
         try {
-            File photoFile = File.createTempFile(
-                "IMG_", ".jpg",
-                getExternalFilesDir(Environment.DIRECTORY_PICTURES));
-            pendingPhotoUri = FileProvider.getUriForFile(
+            photoFile = File.createTempFile("IMG_", ".jpg", dir);
+            Uri photoUri = FileProvider.getUriForFile(
                 this, "com.example.mediapickerdemo.fileprovider", photoFile);
-            takePictureLauncher.launch(pendingPhotoUri);
-        } catch (Exception e) {
-            e.printStackTrace();
+            pendingPhotoFile = photoFile;
+            pendingPhotoUri = photoUri;
+            takePictureLauncher.launch(photoUri);
+        } catch (IOException | IllegalArgumentException | ActivityNotFoundException
+                | SecurityException e) {
+            if (photoFile != null && photoFile.exists() && !photoFile.delete()) {
+                Toast.makeText(this, "無法清除未完成的照片檔", Toast.LENGTH_SHORT).show();
+            }
+            pendingPhotoFile = null;
+            pendingPhotoUri = null;
+            Toast.makeText(this, "開啟相機失敗：" + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void deletePendingPhoto() {
+        if (pendingPhotoFile != null && pendingPhotoFile.exists()
+                && !pendingPhotoFile.delete()) {
+            Toast.makeText(this, "無法清除未完成的照片檔", Toast.LENGTH_SHORT).show();
         }
     }
 }

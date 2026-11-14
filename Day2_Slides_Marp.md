@@ -933,18 +933,16 @@ btnPick.setOnClickListener(v -> {
     }
 });
 ```
-
 | 合約 | 啟動參數 | 回傳 | 權限 |
 |---|---|---|---|
 | `PickVisualMedia` | `PickVisualMediaRequest` | `Uri?` | 免權限 |
-
 **🔍 解說**
 - `isPhotoPickerAvailable(this)`：先判斷裝置有沒有系統 Photo Picker。
 - `PickVisualMedia.ImageOnly.INSTANCE` 限制只挑圖片（另有 `VideoOnly`、`ImageAndVideo`）。
 - 舊機走 `GetContent` 備援，參數 `"image/*"` 是 MIME type。
 - callback 的 `uri` 可能為 `null`（使用者按取消），務必先判斷。
-
 ---
+
 
 # 5.5｜選檔案：OpenDocument
 
@@ -959,10 +957,8 @@ private final ActivityResultLauncher<String[]> openDocLauncher =
     });
 
 btnOpen.setOnClickListener(v ->
-    openDocLauncher.launch(new String[]{"text/plain","application/pdf", "image/*"}));
-    
+    openDocLauncher.launch(new String[]{"text/plain","application/pdf", "image/*"}));    
 ```
-
 - 啟動參數是 **`String[]`（MIME types）**：`application/pdf`、`image/*`、`*/*`
 - 重開 App 仍要能讀 → 呼叫 `takePersistableUriPermission`
 
@@ -976,39 +972,174 @@ btnOpen.setOnClickListener(v ->
 - `OpenDocument` 的啟動參數是 `String[]`（可同時接受多種 MIME）。
 - `takePersistableUriPermission(...)` 取得持久讀取權，重開 App 仍能讀同一個檔案。
 - `getContentResolver()` 是讀取 `content://` 的入口，之後可用 `openInputStream(uri)`。
+---
 
+# 5.5.1  readTextFromUri(uri)：呼叫自訂的輔助方法 : 透過 ContentResolver 開啟檔案輸入串流（InputStream），逐行讀取 txt 檔案內文並合併成字串。
+```java
+private String readTextFromUri(Uri uri) {
+        StringBuilder stringBuilder = new StringBuilder();
+        try (InputStream inputStream = getContentResolver().openInputStream(uri);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line).append("\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "讀取檔案失敗：" + e.getMessage();
+        }
+        return stringBuilder.toString();
+    }
+```
 ---
 
 # 5.5｜拍照：TakePicture + FileProvider
 
-1. 建立 `res/xml/file_paths.xml`
-2. `AndroidManifest.xml` 註冊 `<provider>`
-3. 建暫存檔 → `FileProvider.getUriForFile` → `TakePicture`
-4. callback 用該 Uri 顯示圖片
+以下範例以 `com.example.takepicturedemo` 為套件名稱，需建立三個檔案／設定：
 
+**`res/xml/file_paths.xml`**
 ```xml
+<?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <external-files-path name="my_images" path="Pictures/" />
 </paths>
+```
 
+**`AndroidManifest.xml`**：將 provider 放在 `<application>` 內。
+```xml
 <provider
     android:name="androidx.core.content.FileProvider"
     android:authorities="com.example.takepicturedemo.fileprovider"
-    android:exported="false" android:grantUriPermissions="true">
-    <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
+    android:exported="false"
+    android:grantUriPermissions="true">
+    <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
         android:resource="@xml/file_paths" />
 </provider>
 ```
+---
+
+**`activity_main.xml`**
+```xml
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <Button
+        android:id="@+id/btnTakePhoto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="拍照" />
+
+    <ImageView
+        android:id="@+id/ivPhoto"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_marginTop="16dp"
+        android:background="#DDDDDD"
+        android:scaleType="centerCrop" />
+</LinearLayout>
+```
+---
+
+**`MainActivity.java`**（套件名稱及 authorities 要與專案一致）
+```java
+package com.example.takepicturedemo;
+
+
+public class MainActivity extends AppCompatActivity {
+    private static final String STATE_PHOTO_URI = "photo_uri";
+    private static final String STATE_PHOTO_PATH = "photo_path";
+
+    private ImageView ivPhoto;
+    private Uri pendingPhotoUri;
+    private File pendingPhotoFile;
+
+    private final ActivityResultLauncher<Uri> takePictureLauncher =
+        registerForActivityResult(new TakePicture(), success -> {
+            if (success && pendingPhotoUri != null) {
+                ivPhoto.setImageURI(pendingPhotoUri);
+            } else {
+                deletePendingPhoto();
+                Toast.makeText(this, "未拍照或已取消", Toast.LENGTH_SHORT).show();
+            }
+            pendingPhotoUri = null;
+            pendingPhotoFile = null;
+        });
+```
+---
+```java
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        ivPhoto = findViewById(R.id.ivPhoto);
+        if (savedInstanceState != null) {
+            String uri = savedInstanceState.getString(STATE_PHOTO_URI);
+            String path = savedInstanceState.getString(STATE_PHOTO_PATH);
+            if (uri != null) pendingPhotoUri = Uri.parse(uri);
+            if (path != null) pendingPhotoFile = new File(path);
+        }
+
+        findViewById(R.id.btnTakePhoto).setOnClickListener(v -> takePhoto());
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        if (pendingPhotoUri != null) {
+            outState.putString(STATE_PHOTO_URI, pendingPhotoUri.toString());
+        }
+        if (pendingPhotoFile != null) {
+            outState.putString(STATE_PHOTO_PATH, pendingPhotoFile.getAbsolutePath());
+        }
+        super.onSaveInstanceState(outState);
+    }
+```
+---
 
 ```java
-File photoFile = File.createTempFile("IMG_", ".jpg",
-    getExternalFilesDir(Environment.DIRECTORY_PICTURES));
-pendingPhotoUri = FileProvider.getUriForFile(
-    this, "com.example.takepicturedemo.fileprovider", photoFile);
-takePictureLauncher.launch(pendingPhotoUri);
+    private void takePhoto() {
+        File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (dir == null || (!dir.isDirectory() && !dir.mkdirs())) {
+            Toast.makeText(this, "找不到可儲存的圖片目錄", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        File photoFile = null;
+        try {
+            photoFile = File.createTempFile("IMG_", ".jpg", dir);
+            Uri photoUri = FileProvider.getUriForFile(
+                this, "com.example.takepicturedemo.fileprovider", photoFile);
+            pendingPhotoFile = photoFile;
+            pendingPhotoUri = photoUri;
+            takePictureLauncher.launch(photoUri);
+        } catch (IOException | IllegalArgumentException | ActivityNotFoundException
+                | SecurityException e) {
+            if (photoFile != null && photoFile.exists() && !photoFile.delete()) {
+                Toast.makeText(this, "無法清除未完成的照片檔", Toast.LENGTH_SHORT).show();
+            }
+            pendingPhotoFile = null;
+            pendingPhotoUri = null;
+            Toast.makeText(this, "開啟相機失敗：" + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void deletePendingPhoto() {
+        if (pendingPhotoFile != null && pendingPhotoFile.exists()
+                && !pendingPhotoFile.delete()) {
+            Toast.makeText(this, "無法清除未完成的照片檔", Toast.LENGTH_SHORT).show();
+        }
+    }
+}
 ```
 
-> ⚠️ `android:authorities` 必須與 `getUriForFile(..., "此字串", ...)` **完全一致**。
+> ⚠️ 不需要相機執行時權限。`android:authorities` 必須與 `getUriForFile` 第二個參數完全相同；
+> `file_paths.xml` 必須位於 `res/xml/`，且 provider 必須放在 `<application>` 內。
 
 ---
 
@@ -1017,7 +1148,8 @@ takePictureLauncher.launch(pendingPhotoUri);
 - `file_paths.xml` 宣告「哪些資料夾可被 FileProvider 分享」；`path="Pictures/"` 對應 `getExternalFilesDir(...)`。
 - `<provider>` 的 `authorities` 是這個 provider 的唯一識別碼。
 - `File.createTempFile(...)` 先建空檔，再把它的 Uri 交給相機寫入。
-- `pendingPhotoUri` 存成欄位，callback 才知道照片寫到哪裡。
+- launcher 在欄位註冊；待處理 Uri 存成欄位，並透過 `onSaveInstanceState` 應付 Activity 重建。
+- 使用者取消時清除未完成檔案；建立目錄、建立檔案或啟動相機失敗時顯示錯誤。
 - `android:authorities` 與 `getUriForFile` 第二參數不一致 → `IllegalArgumentException`。
 
 ---
